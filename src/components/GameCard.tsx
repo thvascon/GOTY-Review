@@ -38,14 +38,14 @@ export const GameCard = ({
   };
 
   return (
-    <div className={cn("game-card p-4 relative rounded-lg cursor-pointer transition-transform duration-200 hover:scale-105", className)}
+    <div className={cn("game-card p-4 relative rounded-lg cursor-pointer transition-transform duration-200 hover:scale-105 ", className)}
     onClick={onClick}
     >
       
       <Button
         variant="destructive"
         size="icon"
-        className="absolute top-2 right-2 w-7 h-7 z-10 opacity-70 hover:opacity-100"
+        className="absolute top-2 right-2 w-7 h-7 z-10 opacity-10 hover:opacity-100 "
         onClick={handleRemoveClick}
       >
         <X className="w-4 h-4" />
