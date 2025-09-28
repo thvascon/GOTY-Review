@@ -50,7 +50,7 @@ const AccordionContent = React.forwardRef<
     )}
     {...props}
   >
-    <div className="overflow-hidden">
+    <div className="overflow-visible">
       <div className="pb-4 pt-0">{children}</div>
     </div>
   </AccordionPrimitive.Content>
