@@ -338,25 +338,30 @@ const Index = () => {
         <main>
           <Accordion type="single" collapsible className="w-full">
             {sections.map((section) => (
-              <AccordionItem key={section.id} value={section.id}>
+              <AccordionItem
+                key={section.id}
+                value={section.id}
+                className="border-b-0 overflow-visible relative"
+              >
                 <AccordionTrigger className="text-2xl font-bold hover:no-underline">
                   {section.title}
                 </AccordionTrigger>
-                <AccordionContent>
+                <AccordionContent className="overflow-visible relative">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {games
                       .filter((game) => game.sectionId === section.id)
                       .map((game) => (
-                        <GameCard
-                          key={game.id}
-                          id={game.id}
-                          title={game.title}
-                          coverImage={game.coverImage}
-                          ratings={getGameRatings(game.id)}
-                          onRatingChange={handleRatingChange}
-                          onRemoveGame={handleRemoveGame}
-                          onClick={() => handleCardClick(game)}
-                        />
+                        <div key={game.id} className="relative z-0 hover:z-10">
+                          <GameCard
+                            id={game.id}
+                            title={game.title}
+                            coverImage={game.coverImage}
+                            ratings={getGameRatings(game.id)}
+                            onRatingChange={handleRatingChange}
+                            onRemoveGame={handleRemoveGame}
+                            onClick={() => handleCardClick(game)}
+                          />
+                        </div>
                       ))}
                   </div>
                 </AccordionContent>
