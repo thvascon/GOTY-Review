@@ -20,7 +20,7 @@ export const Header = ({ onAddGame, onAddPerson, existingPersonNames, className 
         </div>
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-            GOTY Review dos cats
+            GOTY Review
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
           </p>
