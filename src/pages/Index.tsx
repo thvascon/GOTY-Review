@@ -9,13 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   GameDetailsModal,
   GameWithDetails,
-} from "@/components/GameDetailsModal"; // NOVO
-
-// Import game cover images
-import cyberpunkCover from "@/assets/game-cyberpunk.jpg";
-import eldenRingCover from "@/assets/game-elden-ring.jpg";
-import witcherCover from "@/assets/game-witcher.jpg";
-import godOfWarCover from "@/assets/game-god-of-war.jpg";
+} from "@/components/GameDetailsModal";
 
 interface Player {
   id: string;
