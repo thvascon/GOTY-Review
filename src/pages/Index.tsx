@@ -10,6 +10,12 @@ import {
   GameDetailsModal,
   GameWithDetails,
 } from "@/components/GameDetailsModal";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface Player {
   id: string;
@@ -20,6 +26,7 @@ interface Game {
   id: string;
   title: string;
   coverImage: string;
+  sectionId?: string;
 }
 
 interface Rating {
@@ -28,13 +35,18 @@ interface Rating {
   rating: number;
 }
 
+interface Section {
+  id: string;
+  title: string;
+}
+
 const Index = () => {
   const { toast } = useToast();
 
   const [players, setPlayers] = useState<Player[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [ratings, setRatings] = useState<Rating[]>([]);
-
+  const [sections, setSections] = useState<Section[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
@@ -42,44 +54,70 @@ const Index = () => {
 
   // Carrega dados do Supabase ao montar
   useEffect(() => {
+    // 1. Função para buscar todos os dados frescos do banco
     const fetchData = async () => {
-      const { data: playersData } = await supabase.from("people").select("*");
-      setPlayers(
-        (playersData || []).map((p: any) => ({
-          id: p.id,
-          name: p.name,
-        }))
-      );
+      console.log("Buscando todos os dados..."); // Log para depuração
 
+      const { data: peopleData } = await supabase.from("people").select("*");
+      const { data: sectionsData } = await supabase
+        .from("sections")
+        .select("*");
       const { data: gamesData } = await supabase.from("games").select("*");
+      const { data: reviewsData } = await supabase.from("reviews").select("*");
+
+      setPlayers(peopleData || []);
+      setSections(sectionsData || []);
+
+      // AQUI ESTÁ A CORREÇÃO PRINCIPAL: trocamos 'cover_image_url' por 'cover_image'
       setGames(
         (gamesData || []).map((g: any) => ({
           id: g.id,
           title: g.name,
           coverImage: g.cover_image || "/placeholder.svg", // <-- CORRIGIDO AQUI
+          sectionId: g.section_id,
         }))
       );
 
-      const { data: ratingsData } = await supabase.from("reviews").select("*");
       setRatings(
-        (ratingsData || []).map((r: any) => ({
+        (reviewsData || []).map((r: any) => ({
           gameId: r.game_id,
           playerId: r.person_id,
           rating: r.rating,
         }))
       );
     };
+
+    // 2. Busca os dados iniciais
     fetchData();
+
+    // 3. Configura o Realtime
+    const channel = supabase
+      .channel("table-db-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public" }, // Escuta todas as tabelas no schema public
+        (payload) => {
+          console.log("Mudança recebida!", payload);
+          // Quando qualquer coisa mudar, busca todos os dados novamente para garantir a sincronia
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    // 4. Limpeza
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleCardClick = (game: Game) => {
     // 1. Prepara os dados básicos que já temos (título, imagem, notas)
     const initialDetails: GameWithDetails = {
       ...game,
-      description: '', // A descrição começa vazia e será carregada depois, dentro do modal
+      description: "", // A descrição começa vazia e será carregada depois, dentro do modal
       ratings: getGameRatings(game.id),
     };
-    
+
     // 2. Guarda esses dados iniciais no estado
     setSelectedGameDetails(initialDetails);
 
@@ -142,6 +180,7 @@ const Index = () => {
   const handleAddGame = async (gameData: {
     title: string;
     coverImage?: string;
+    sectionId?: string;
   }) => {
     const { data, error } = await supabase
       .from("games")
@@ -149,6 +188,7 @@ const Index = () => {
         {
           name: gameData.title,
           cover_image: gameData.coverImage || "/placeholder.svg",
+          section_id: gameData.sectionId || null,
         },
       ])
       .select()
@@ -296,20 +336,33 @@ const Index = () => {
 
         {/* Games Grid */}
         <main>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {games.map((game) => (
-              <GameCard
-                key={game.id}
-                id={game.id}
-                title={game.title}
-                coverImage={game.coverImage}
-                ratings={getGameRatings(game.id)}
-                onRatingChange={handleRatingChange}
-                onRemoveGame={handleRemoveGame}
-                onClick={() => handleCardClick(game)}
-              />
+          <Accordion type="single" collapsible className="w-full">
+            {sections.map((section) => (
+              <AccordionItem key={section.id} value={section.id}>
+                <AccordionTrigger className="text-2xl font-bold hover:no-underline">
+                  {section.title}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {games
+                      .filter((game) => game.sectionId === section.id)
+                      .map((game) => (
+                        <GameCard
+                          key={game.id}
+                          id={game.id}
+                          title={game.title}
+                          coverImage={game.coverImage}
+                          ratings={getGameRatings(game.id)}
+                          onRatingChange={handleRatingChange}
+                          onRemoveGame={handleRemoveGame}
+                          onClick={() => handleCardClick(game)}
+                        />
+                      ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
 
           {/* Empty State Message */}
           {games.length === 0 && (

@@ -1,6 +1,6 @@
-// Arquivo: AddGameDialog.tsx (versão final com API)
+// AddGameDialog.tsx
 
-import { useState, useEffect } from "react"; // Adicionamos o useEffect
+import { useState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { z } from "zod";
 import {
@@ -14,10 +14,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
-// Schema de validação (sem mudanças)
+// Schema atualizado
 const gameSchema = z.object({
   title: z.string().trim().min(1, { message: "O título não pode estar vazio" }),
   coverImage: z
@@ -26,42 +27,62 @@ const gameSchema = z.object({
     .url({ message: "URL da imagem inválida" })
     .optional()
     .or(z.literal("")),
+  sectionId: z.string().min(1, { message: "Selecione uma seção" }),
 });
 
-// NOVO: Criamos uma interface para os dados que vêm da API da RAWG
 interface ApiGame {
   id: number;
   name: string;
   background_image: string;
 }
 
+interface Section {
+  id: string;
+  title: string;
+}
+
 interface AddGameDialogProps {
-  onAddGame: (game: { title: string; coverImage?: string }) => void;
+  onAddGame: (game: { title: string; coverImage?: string; sectionId: string }) => void;
   trigger?: React.ReactNode;
 }
 
 export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({ title: "", coverImage: "" });
+  const [formData, setFormData] = useState({ title: "", coverImage: "", sectionId: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  // NOVO: Estado para guardar os resultados da busca da API
+  const [sections, setSections] = useState<Section[]>([]);
   const [searchResults, setSearchResults] = useState<ApiGame[]>([]);
-
-  // COLOQUE SUA CHAVE DA RAWG.IO AQUI
+  const selectionMade = useRef(false);
   const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 
-  // NOVO: Lógica que busca na API sempre que o título (formData.title) muda
+  // Busca as seções do Supabase quando o modal abre
   useEffect(() => {
-    // Só busca se o usuário digitou pelo menos 3 caracteres
+    if (!open) return;
+    const fetchSections = async () => {
+      const { data, error } = await supabase.from("sections").select("id, title");
+      if (error) {
+        console.error("Erro ao buscar seções:", error);
+        return;
+      }
+      setSections(data || []);
+    };
+    fetchSections();
+  }, [open]);
+
+  // Busca jogos na API RAWG
+  useEffect(() => {
+    if (selectionMade.current) {
+      selectionMade.current = false; // Abaixa a bandeira e sai
+      return;
+    }
+
     if (formData.title.trim().length < 3) {
       setSearchResults([]);
       return;
     }
-
-    // Timer para não fazer uma chamada a cada tecla pressionada (debounce)
     const debounceTimer = setTimeout(() => {
       const fetchGames = async () => {
         try {
@@ -74,11 +95,9 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
         }
       };
       fetchGames();
-    }, 500); // Espera 500ms após o usuário parar de digitar
-
-    // Limpa o timer se o usuário continuar digitando
+    }, 500);
     return () => clearTimeout(debounceTimer);
-  }, [formData.title]); // Esta é a "dependência": roda a lógica sempre que o título mudar
+  }, [formData.title]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -87,18 +106,16 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     }
   };
 
-  // NOVO: Função chamada quando o usuário clica em um jogo da lista de sugestões
   const handleGameSelect = (game: ApiGame) => {
-    // Preenche automaticamente o título e a URL da capa no formulário
+    selectionMade.current = true;
     setFormData({
+      ...formData,
       title: game.name,
       coverImage: game.background_image,
     });
-    // Esconde a lista de resultados
     setSearchResults([]);
   };
 
-  // Funções de validação e submit (sem mudanças)
   const validateForm = () => {
     try {
       gameSchema.parse(formData);
@@ -117,33 +134,26 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
       return false;
     }
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
     setIsSubmitting(true);
-    
     try {
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      
       onAddGame({
         title: formData.title.trim(),
-        coverImage: formData.coverImage.trim() || undefined
+        coverImage: formData.coverImage.trim() || undefined,
+        sectionId: formData.sectionId,
       });
-      
       toast({
         title: "Jogo adicionado!",
         description: `"${formData.title}" foi adicionado à lista de jogos.`,
         duration: 3000
       });
-      
-      // Reset form and close dialog
-      setFormData({ title: '', coverImage: '' });
+      setFormData({ title: '', coverImage: '', sectionId: '' });
       setErrors({});
       setOpen(false);
-      
     } catch (error) {
       toast({
         title: "Erro ao adicionar jogo",
@@ -156,82 +166,99 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     }
   };
 
-return (
-  <Dialog open={open} onOpenChange={setOpen}>
-    {/* Alinha o botão com outros elementos na mesma linha */}
-    <div className="flex items-center gap-x-2">
-      <DialogTrigger asChild>
-        <Button className="btn-glow flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Adicionar Novo Jogo
-        </Button>
-      </DialogTrigger>
-      {/* Adicione outros botões ou filtros aqui, se houver */}
-    </div>
-    <DialogContent className="sm:max-w-md mx-auto">
-      <DialogHeader>
-        <DialogTitle className="text-center">Adicionar Novo Jogo</DialogTitle>
-        <DialogDescription className="text-center">
-          Digite um título para buscar e adicionar um novo jogo.
-        </DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2 relative">
-          <Label htmlFor="title">Título do Jogo *</Label>
-          <Input
-            id="title"
-            type="text"
-            placeholder="Ex: The Last of Us Part II"
-            value={formData.title}
-            onChange={(e) => handleInputChange("title", e.target.value)}
-            autoComplete="off"
-          />
-          {searchResults.length > 0 && (
-            <div className="absolute z-10 w-full bg-background border border-border rounded-md mt-1 shadow-lg">
-              <ul className="max-h-60 overflow-y-auto">
-                {searchResults.map((game) => (
-                  <li
-                    key={game.id}
-                    className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
-                    onClick={() => handleGameSelect(game)}
-                  >
-                    {game.name}
-                  </li>
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <div className="flex items-center gap-x-2">
+        <DialogTrigger asChild>
+          <Button className="btn-glow flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Adicionar Novo Jogo
+          </Button>
+        </DialogTrigger>
+      </div>
+      <DialogContent className="sm:max-w-md mx-auto">
+        <DialogHeader>
+          <DialogTitle className="text-center">Adicionar Novo Jogo</DialogTitle>
+          <DialogDescription className="text-center">
+            Digite um título, escolha a seção e adicione o jogo.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          
+          {/* Título */}
+          <div className="space-y-2 relative">
+            <Label htmlFor="title">Título do Jogo *</Label>
+            <Input
+              id="title"
+              type="text"
+              placeholder="Ex: The Last of Us Part II"
+              value={formData.title}
+              onChange={(e) => handleInputChange("title", e.target.value)}
+              autoComplete="off"
+            />
+            {searchResults.length > 0 && (
+              <div className="absolute z-10 w-full bg-background border border-border rounded-md mt-1 shadow-lg">
+                <ul className="max-h-60 overflow-y-auto">
+                  {searchResults.map((game) => (
+                    <li
+                      key={game.id}
+                      className="px-3 py-2 text-sm cursor-pointer hover:bg-accent"
+                      onClick={() => handleGameSelect(game)}
+                    >
+                      {game.name}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+          </div>
+
+          {/* URL da capa */}
+          <div className="space-y-2">
+            <Label htmlFor="coverImage">URL da Capa</Label>
+            <Input
+              id="coverImage"
+              type="url"
+              placeholder="Preenchido automaticamente..."
+              value={formData.coverImage}
+              onChange={(e) => handleInputChange("coverImage", e.target.value)}
+            />
+            {errors.coverImage && <p className="text-sm text-destructive">{errors.coverImage}</p>}
+          </div>
+
+          {/* Select de Seções */}
+          <div className="space-y-2">
+            <Label>Seção *</Label>
+            <Select
+              value={formData.sectionId}
+              onValueChange={(value) => handleInputChange("sectionId", value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione uma seção" />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.title}
+                  </SelectItem>
                 ))}
-              </ul>
-            </div>
-          )}
-          {errors.title && (
-            <p className="text-sm text-destructive">{errors.title}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="coverImage">URL da Capa (automático)</Label>
-          <Input
-            id="coverImage"
-            type="url"
-            placeholder="Preenchido automaticamente após a busca..."
-            value={formData.coverImage}
-            onChange={(e) => handleInputChange("coverImage", e.target.value)}
-          />
-          {errors.coverImage && (
-            <p className="text-sm text-destructive">{errors.coverImage}</p>
-          )}
-        </div>
-        <div className="flex justify-end gap-3 pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOpen(false)}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Adicionando..." : "Adicionar Jogo"}
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  </Dialog>
-);
+              </SelectContent>
+            </Select>
+            {errors.sectionId && <p className="text-sm text-destructive">{errors.sectionId}</p>}
+          </div>
+
+          {/* Botões */}
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Adicionando..." : "Adicionar Jogo"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 };
