@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  GameDetailsModal,
-  GameWithDetails,
+  GameDetailsModal
 } from "@/components/GameDetailsModal";
 import {
   Accordion,
@@ -40,6 +39,14 @@ interface Section {
   title: string;
 }
 
+interface GameWithDetails extends Game {
+  ratings: {
+    playerId: string;
+    playerName: string;
+    rating: number;
+  }[];
+}
+
 const Index = () => {
   const { toast } = useToast();
 
@@ -50,7 +57,6 @@ const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
-  const [isDetailLoading, setIsDetailLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,6 +86,7 @@ const Index = () => {
           gameId: r.game_id,
           playerId: r.person_id,
           rating: r.rating,
+          comment: r.comment, // Novo campo de comentário
         }))
       );
     };
@@ -107,7 +114,6 @@ const Index = () => {
   const handleCardClick = (game: Game) => {
     const initialDetails: GameWithDetails = {
       ...game,
-      description: "", 
       ratings: getGameRatings(game.id),
     };
 
@@ -378,6 +384,8 @@ const Index = () => {
         game={selectedGameDetails}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        players={players}
+        allReviews={ratings}
       />
     </div>
   );

@@ -73,6 +73,7 @@ export type Database = {
           person_id: string | null;
           played: boolean | null;
           rating: number | null;
+          comment: string | null;
         };
         Insert: {
           created_at?: string;
