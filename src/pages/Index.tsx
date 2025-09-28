@@ -52,11 +52,9 @@ const Index = () => {
     useState<GameWithDetails | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
 
-  // Carrega dados do Supabase ao montar
   useEffect(() => {
-    // 1. Função para buscar todos os dados frescos do banco
     const fetchData = async () => {
-      console.log("Buscando todos os dados..."); // Log para depuração
+      console.log("Buscando todos os dados...");
 
       const { data: peopleData } = await supabase.from("people").select("*");
       const { data: sectionsData } = await supabase
@@ -68,12 +66,11 @@ const Index = () => {
       setPlayers(peopleData || []);
       setSections(sectionsData || []);
 
-      // AQUI ESTÁ A CORREÇÃO PRINCIPAL: trocamos 'cover_image_url' por 'cover_image'
       setGames(
         (gamesData || []).map((g: any) => ({
           id: g.id,
           title: g.name,
-          coverImage: g.cover_image || "/placeholder.svg", // <-- CORRIGIDO AQUI
+          coverImage: g.cover_image || "/placeholder.svg", 
           sectionId: g.section_id,
         }))
       );
@@ -87,18 +84,15 @@ const Index = () => {
       );
     };
 
-    // 2. Busca os dados iniciais
     fetchData();
 
-    // 3. Configura o Realtime
     const channel = supabase
       .channel("table-db-changes")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public" }, // Escuta todas as tabelas no schema public
+        { event: "*", schema: "public" }, 
         (payload) => {
           console.log("Mudança recebida!", payload);
-          // Quando qualquer coisa mudar, busca todos os dados novamente para garantir a sincronia
           fetchData();
         }
       )
@@ -111,17 +105,14 @@ const Index = () => {
   }, []);
 
   const handleCardClick = (game: Game) => {
-    // 1. Prepara os dados básicos que já temos (título, imagem, notas)
     const initialDetails: GameWithDetails = {
       ...game,
-      description: "", // A descrição começa vazia e será carregada depois, dentro do modal
+      description: "", 
       ratings: getGameRatings(game.id),
     };
 
-    // 2. Guarda esses dados iniciais no estado
     setSelectedGameDetails(initialDetails);
 
-    // 3. Abre o modal instantaneamente
     setIsModalOpen(true);
   };
 
@@ -146,7 +137,6 @@ const Index = () => {
         .insert([{ game_id: gameId, person_id: playerId, rating: newRating }]);
     }
 
-    // Refetch ratings
     const { data: ratingsData } = await supabase.from("reviews").select("*");
     setRatings(
       (ratingsData || []).map((r: any) => ({
@@ -156,7 +146,6 @@ const Index = () => {
       }))
     );
 
-    // Show toast feedback
     const game = games.find((g) => g.id === gameId);
     const player = players.find((p) => p.id === playerId);
 
@@ -213,7 +202,6 @@ const Index = () => {
         },
       ]);
 
-      // Inicializa avaliações para todos os jogadores
       if (players.length > 0) {
         const ratingsToInsert = players.map((player) => ({
           game_id: data.id,
@@ -221,7 +209,6 @@ const Index = () => {
           rating: 0,
         }));
         await supabase.from("reviews").insert(ratingsToInsert);
-        // Refetch ratings
         const { data: ratingsData } = await supabase
           .from("reviews")
           .select("*");
@@ -255,7 +242,6 @@ const Index = () => {
     if (data) {
       setPlayers((prev) => [...prev, { id: data.id, name: data.name }]);
 
-      // Filtra apenas jogos com id válido
       const validGames = games.filter((game) => !!game.id);
       if (validGames.length > 0) {
         const ratingsToInsert = validGames.map((game) => ({
@@ -264,7 +250,6 @@ const Index = () => {
           rating: 0,
         }));
         await supabase.from("reviews").insert(ratingsToInsert);
-        // Refetch ratings
         const { data: ratingsData } = await supabase
           .from("reviews")
           .select("*");
@@ -283,7 +268,6 @@ const Index = () => {
     const gameToRemove = games.find((g) => g.id === gameId);
     if (!gameToRemove) return;
 
-    // Pedimos confirmação ao usuário, pois deletar é uma ação permanente
     const confirmed = window.confirm(
       `Tem certeza que deseja remover o jogo "${gameToRemove.title}"? Todas as avaliações também serão removidas.`
     );
@@ -292,7 +276,6 @@ const Index = () => {
       return;
     }
 
-    // Deleta o jogo da tabela 'games' no Supabase
     const { error } = await supabase.from("games").delete().eq("id", gameId);
 
     if (error) {
@@ -303,7 +286,6 @@ const Index = () => {
         variant: "destructive",
       });
     } else {
-      // Se deu certo no banco, removemos o jogo da nossa lista local (estado)
       setGames((prevGames) => prevGames.filter((game) => game.id !== gameId));
       toast({
         title: "Jogo removido!",
@@ -334,7 +316,6 @@ const Index = () => {
           existingPersonNames={players.map((p) => p.name)}
         />
 
-        {/* Games Grid */}
         <main>
           <Accordion type="single" collapsible className="w-full">
             {sections.map((section) => (
@@ -369,7 +350,6 @@ const Index = () => {
             ))}
           </Accordion>
 
-          {/* Empty State Message */}
           {games.length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">

@@ -13,7 +13,6 @@ interface HeaderProps {
 export const Header = ({ onAddGame, onAddPerson, existingPersonNames, className }: HeaderProps) => {
   return (
     <header className={cn("flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8", className)}>
-      {/* Title Section */}
       <div className="flex items-center gap-3">
         <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent">
           <Gamepad2 className="w-6 h-6 text-primary-foreground" />

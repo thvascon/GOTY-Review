@@ -1,5 +1,3 @@
-// AddGameDialog.tsx
-
 import { useState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { z } from "zod";
@@ -18,7 +16,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-// Schema atualizado
 const gameSchema = z.object({
   title: z.string().trim().min(1, { message: "O título não pode estar vazio" }),
   coverImage: z
@@ -58,7 +55,6 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
   const selectionMade = useRef(false);
   const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 
-  // Busca as seções do Supabase quando o modal abre
   useEffect(() => {
     if (!open) return;
     const fetchSections = async () => {
@@ -72,10 +68,9 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     fetchSections();
   }, [open]);
 
-  // Busca jogos na API RAWG
   useEffect(() => {
     if (selectionMade.current) {
-      selectionMade.current = false; // Abaixa a bandeira e sai
+      selectionMade.current = false;
       return;
     }
 
@@ -214,7 +209,6 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
             {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
           </div>
 
-          {/* URL da capa */}
           <div className="space-y-2">
             <Label htmlFor="coverImage">URL da Capa</Label>
             <Input
@@ -227,7 +221,6 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
             {errors.coverImage && <p className="text-sm text-destructive">{errors.coverImage}</p>}
           </div>
 
-          {/* Select de Seções */}
           <div className="space-y-2">
             <Label>Seção *</Label>
             <Select
@@ -248,7 +241,6 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
             {errors.sectionId && <p className="text-sm text-destructive">{errors.sectionId}</p>}
           </div>
 
-          {/* Botões */}
           <div className="flex justify-end gap-3 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar

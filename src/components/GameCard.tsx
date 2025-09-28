@@ -1,4 +1,3 @@
-// Arquivo: src/components/GameCard.tsx (Versão Final Corrigida)
 
 import { StarRating } from './StarRating';
 import { cn } from '@/lib/utils';
@@ -6,7 +5,6 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import React from 'react';
 
-// ... (suas interfaces PlayerRating e GameCardProps, sem alterações)
 interface PlayerRating {
   playerId: string;
   playerName: string;
@@ -46,9 +44,8 @@ export const GameCard = ({
       className={cn("bg-card rounded-lg shadow-lg overflow-hidden flex flex-col cursor-pointer transition-transform duration-200 hover:scale-105 relative z-0 hover:z-10 transition-transform duration-300 transform hover:scale-105 relative", className)}
       onClick={onClick}
     >
-      {/* Container da Imagem */}
       <div className="relative w-full h-48 bg-muted">
-        {onRemoveGame && ( // O botão de remover só aparece se a função for passada
+        {onRemoveGame && (
           <Button
             variant="destructive"
             size="icon"
@@ -67,9 +64,7 @@ export const GameCard = ({
         />
       </div>
 
-      {/* Container do Conteúdo (Título, Avaliações, Média) */}
       <div className="p-4 flex flex-col flex-grow">
-        {/* Div principal que cresce para empurrar a média para baixo */}
         <div className="flex-grow">
           <h3 className="mb-4 text-lg font-bold line-clamp-2 h-14">
             {title}
@@ -88,7 +83,6 @@ export const GameCard = ({
           </div>
         </div>
 
-        {/* Seção da Média, sempre no final */}
         <div className="pt-4 mt-4 border-t border-border">
           <div className="flex justify-between items-center text-xs text-muted-foreground uppercase">
             <span>Média da Galera</span>
