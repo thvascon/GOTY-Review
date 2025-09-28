@@ -8,7 +8,8 @@
     "css": "src/index.css",
     "baseColor": "slate",
     "cssVariables": true,
-    "prefix": ""
+    "prefix": "",
+    "usePM": "pnpm"
   },
   "aliases": {
     "components": "@/components",
