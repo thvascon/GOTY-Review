@@ -61,6 +61,7 @@ const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
+  const [openAccordion, setOpenAccordion] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,6 +94,13 @@ const Index = () => {
 
         setPlayers(peopleRes.data || []);
         setSections(sectionsRes.data || []);
+        
+        const sectionsData = sectionsRes.data || [];
+        if (sectionsData.length > 0 && !openAccordion) {
+          const geralSection = sectionsData.find(s => s.title === "Gerais");
+          setOpenAccordion(geralSection ? geralSection.id : sectionsData[0].id);
+        }
+        
         setGames(
           (gamesRes.data || []).map((g: any) => ({
             id: g.id,
@@ -396,7 +404,13 @@ const Index = () => {
           <main>
             {session ? (
               <>
-                <Accordion type="single" collapsible className="w-full">
+                <Accordion 
+                  type="single" 
+                  collapsible 
+                  className="w-full" 
+                  value={openAccordion}
+                  onValueChange={setOpenAccordion}
+                >
                   {sections.map((section) => (
                     <AccordionItem
                       key={section.id}
