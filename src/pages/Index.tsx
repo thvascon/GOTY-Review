@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { useAuth } from "@/components/AuthProvider";
 import { Auth } from "@/components/Auth";
+
 interface Player {
   id: string;
   name: string;
@@ -351,14 +352,6 @@ useEffect(() => {
           <main>
             {session ? (
               <>
-                <div className="flex justify-end mb-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => supabase.auth.signOut()}
-                  >
-                    Sair (Logout)
-                  </Button>
-                </div>
                 <Accordion type="single" collapsible className="w-full">
                   {sections.map((section) => (
                     <AccordionItem

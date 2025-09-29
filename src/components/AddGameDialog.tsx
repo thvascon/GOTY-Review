@@ -165,7 +165,7 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <div className="flex items-center gap-x-2">
         <DialogTrigger asChild>
-          <Button className="btn-glow flex items-center gap-2">
+          <Button className="btn-glow flex items-center gap-2 w-full">
             <Plus className="w-4 h-4" />
             Adicionar Novo Jogo
           </Button>
