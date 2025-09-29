@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Validation schema
 const personSchema = z.object({
   name: z.string()
     .trim()
@@ -41,7 +40,6 @@ export const AddPersonDialog = ({ onAddPerson, existingNames, trigger }: AddPers
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -51,7 +49,6 @@ export const AddPersonDialog = ({ onAddPerson, existingNames, trigger }: AddPers
     try {
       personSchema.parse(formData);
       
-      // Check for duplicate names (case insensitive)
       const normalizedName = formData.name.trim().toLowerCase();
       const isDuplicate = existingNames.some(name => 
         name.toLowerCase() === normalizedName
@@ -86,7 +83,6 @@ export const AddPersonDialog = ({ onAddPerson, existingNames, trigger }: AddPers
     setIsSubmitting(true);
     
     try {
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
       onAddPerson({
@@ -99,7 +95,6 @@ export const AddPersonDialog = ({ onAddPerson, existingNames, trigger }: AddPers
         duration: 3000
       });
       
-      // Reset form and close dialog
       setFormData({ name: '' });
       setErrors({});
       setOpen(false);

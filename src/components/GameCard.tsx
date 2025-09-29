@@ -8,18 +8,18 @@ import React from 'react';
 interface PlayerRating {
   playerId: string;
   playerName: string;
-  rating: number;
+  rating: { playerId: string; rating: number; playerName: string }[];
 }
 interface GameCardProps {
   id: string;
   title: string;
   coverImage: string;
-  ratings: PlayerRating[];
+  ratings: { playerId: string; rating: number; playerName: string }[];
   onRatingChange: (gameId: string, playerId: string, rating: number) => void;
   onRemoveGame?: (gameId: string) => void;
   onClick?: () => void;
   className?: string;
-  loggedInPlayerId?: string; // ID do jogador logado, se houver
+  loggedInPlayerId?: string; 
 }
 
 export const GameCard = ({
@@ -79,7 +79,7 @@ export const GameCard = ({
                   rating={rating.rating}
                   onRatingChange={(newRating) => onRatingChange(id, rating.playerId, newRating)}
                   size={14}
-                  disabled={rating.playerId !== loggedInPlayerId} // Só permite mudar se for o jogador logado
+                  disabled={rating.playerId !== loggedInPlayerId}
                 />
               </div>
             ))}

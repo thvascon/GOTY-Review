@@ -58,7 +58,6 @@ export const StarRating = ({
               onClick={(event) => {
                 if (!disabled) {
                   event.stopPropagation();
-                  // Se clicar na mesma estrela que já está selecionada, remove a avaliação
                   if (starValue === rating) {
                     onRatingChange(0);
                   } else {

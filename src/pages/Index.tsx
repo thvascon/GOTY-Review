@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { useAuth } from "@/components/AuthProvider";
 import { Auth } from "@/components/Auth";
+import { GameList } from "@/components/GameList";
 
 interface Player {
   id: string;
@@ -61,64 +62,78 @@ const Index = () => {
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      console.log("Buscando todos os dados em paralelo...");
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log("Buscando todos os dados em paralelo...");
 
-      // Usamos Promise.all para fazer todas as buscas ao mesmo tempo
-      const [peopleRes, sectionsRes, gamesRes, reviewsRes] = await Promise.all([
-        supabase.from('people').select('*'),
-        supabase.from('sections').select('*'),
-        supabase.from('games').select('*'),
-        supabase.from('reviews').select('*')
-      ]);
+        const [peopleRes, sectionsRes, gamesRes, reviewsRes] =
+          await Promise.all([
+            supabase.from("people").select("*"),
+            supabase.from("sections").select("*"),
+            supabase.from("games").select("*"),
+            supabase.from("reviews").select("*"),
+          ]);
 
-      // Verificamos se houve algum erro em qualquer uma das chamadas
-      if (peopleRes.error || sectionsRes.error || gamesRes.error || reviewsRes.error) {
-        console.error("Erro ao buscar dados:", peopleRes.error || sectionsRes.error || gamesRes.error || reviewsRes.error);
-        return; // Sai da função se houver qualquer erro
+        if (
+          peopleRes.error ||
+          sectionsRes.error ||
+          gamesRes.error ||
+          reviewsRes.error
+        ) {
+          console.error(
+            "Erro ao buscar dados:",
+            peopleRes.error ||
+              sectionsRes.error ||
+              gamesRes.error ||
+              reviewsRes.error
+          );
+          return;
+        }
+
+        setPlayers(peopleRes.data || []);
+        setSections(sectionsRes.data || []);
+        setGames(
+          (gamesRes.data || []).map((g: any) => ({
+            id: g.id,
+            title: g.name,
+            coverImage: g.cover_image || "/placeholder.svg",
+            sectionId: g.section_id,
+          }))
+        );
+        setRatings(
+          (reviewsRes.data || []).map((r: any) => ({
+            gameId: r.game_id,
+            playerId: r.person_id,
+            rating: r.rating,
+            comment: r.comment,
+          }))
+        );
+      } catch (error) {
+        console.error("Erro geral no fetchData:", error);
       }
-      
-      // Se tudo deu certo, atualizamos os estados com os dados recebidos
-      setPlayers(peopleRes.data || []);
-      setSections(sectionsRes.data || []);
-      setGames((gamesRes.data || []).map((g: any) => ({
-        id: g.id,
-        title: g.name,
-        coverImage: g.cover_image || "/placeholder.svg",
-        sectionId: g.section_id,
-      })));
-      setRatings((reviewsRes.data || []).map((r: any) => ({
-        gameId: r.game_id,
-        playerId: r.person_id,
-        rating: r.rating,
-        comment: r.comment,
-      })));
+    };
 
-    } catch (error) {
-      console.error("Erro geral no fetchData:", error);
-    }
-  };
+    fetchData();
 
-  fetchData();
+    const channel = supabase
+      .channel("public-tables")
+      .on("postgres_changes", { event: "*", schema: "public" }, (payload) => {
+        console.log(
+          "Mudança no banco detectada, buscando dados novamente...",
+          payload
+        );
+        fetchData();
+      })
+      .subscribe();
 
-  const channel = supabase.channel('public-tables')
-    .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
-      console.log('Mudança no banco detectada, buscando dados novamente...', payload);
-      fetchData();
-    })
-    .subscribe();
-
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   useEffect(() => {
-    // Se o usuário está logado (session existe) E o modal de login ainda está aberto...
     if (session && isAuthModalOpen) {
-      // ...então feche o modal.
       setIsAuthModalOpen(false);
     }
   }, [session, isAuthModalOpen]);
@@ -133,7 +148,7 @@ useEffect(() => {
 
     setIsModalOpen(true);
   };
-  
+
   const handleRatingChange = async (
     gameId: string,
     _playerId_ignored: string,
@@ -338,6 +353,35 @@ useEffect(() => {
     });
   };
 
+  const getAverageRating = (gameId: string) => {
+    const gameRatings = getGameRatings(gameId);
+    const validRatings = gameRatings.filter(r => r.rating > 0);
+    if (validRatings.length === 0) return 0;
+    
+    const sum = validRatings.reduce((total, r) => total + r.rating, 0);
+    return sum / validRatings.length;
+  };
+
+  const renderGameCardsForSection = (sectionId: string) => {
+    const sectionGames = games
+      .filter((game) => game.sectionId === sectionId)
+      .map((game) => ({
+        ...game,
+        averageRating: getAverageRating(game.id),
+      }));
+
+    return (
+      <GameList
+        games={sectionGames}
+        loggedInPlayerId={profile?.id}
+        onCardClick={handleCardClick}
+        onRatingChange={handleRatingChange}
+        onRemoveGame={handleRemoveGame}
+        getGameRatings={getGameRatings}
+      />
+    );
+  };
+
   return (
     <>
       <Auth open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
@@ -363,27 +407,7 @@ useEffect(() => {
                         {section.title}
                       </AccordionTrigger>
                       <AccordionContent className="overflow-visible relative">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                          {games
-                            .filter((game) => game.sectionId === section.id)
-                            .map((game) => (
-                              <div
-                                key={game.id}
-                                className="relative z-0 hover:z-10"
-                              >
-                                <GameCard
-                                  id={game.id}
-                                  title={game.title}
-                                  coverImage={game.coverImage}
-                                  ratings={getGameRatings(game.id)}
-                                  onRatingChange={handleRatingChange}
-                                  onRemoveGame={handleRemoveGame}
-                                  onClick={() => handleCardClick(game)}
-                                  loggedInPlayerId={profile?.id} // Passa o ID do jogador logado
-                                />
-                              </div>
-                            ))}
-                        </div>
+                        {renderGameCardsForSection(section.id)}
                       </AccordionContent>
                     </AccordionItem>
                   ))}

@@ -26,7 +26,7 @@ interface ModalReviewProps {
 
 export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReviewProps) => {
   const { toast } = useToast();
-  const { session, profile } = useAuth(); // Pega o usuário logado
+  const { session, profile } = useAuth();
 
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
@@ -43,7 +43,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
       .filter(review => review.rating > 0);
   }, [reviews, players]);
 
-  // Carrega a avaliação existente do usuário logado
   useEffect(() => {
     if (profile) {
       const existingReview = reviews.find(r => r.playerId === profile.id);
@@ -64,8 +63,7 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
     const { error } = await supabase.from('reviews').upsert({
       game_id: gameId,
-      person_id: profile.id, // Usa o ID do usuário logado
-      rating: userRating,
+      person_id: profile.id, 
       comment: userComment,
     } as any, {
       onConflict: ['person_id', 'game_id'] as any,
@@ -87,7 +85,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
   return (
     <div className="flex flex-col gap-6">
-      {/* SEÇÃO 1: SUA AVALIAÇÃO */}
       {session && profile ? (
         <div className="p-4 bg-card rounded-lg border">
           <h2 className="text-lg font-semibold mb-3">
@@ -120,7 +117,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
         </div>
       )}
 
-      {/* SEÇÃO 2: COMENTÁRIOS DA GALERA */}
       <div>
         <h2 className="text-lg font-semibold mb-3">
           Comentários da Galera ({reviewsWithUserNames.length})
