@@ -14,13 +14,18 @@ export type Game = {
   coverImage: string;
   averageRating: number;
   sectionId?: string;
+  genres?: string[];
 };
 
 interface GameListProps {
   games: Game[];
   loggedInPlayerId?: string;
   onCardClick: (game: Game) => void;
-  onRatingChange: (gameId: string, playerId: string, newRating: number) => Promise<void>;
+  onRatingChange: (
+    gameId: string,
+    playerId: string,
+    newRating: number
+  ) => Promise<void>;
   onRemoveGame: (gameId: string) => Promise<void>;
   getGameRatings: (gameId: string) => Array<{
     playerId: string;
@@ -29,13 +34,13 @@ interface GameListProps {
   }>;
 }
 
-export function GameList({ 
-  games, 
-  loggedInPlayerId, 
-  onCardClick, 
-  onRatingChange, 
-  onRemoveGame, 
-  getGameRatings 
+export function GameList({
+  games,
+  loggedInPlayerId,
+  onCardClick,
+  onRatingChange,
+  onRemoveGame,
+  getGameRatings,
 }: GameListProps) {
   const [sortBy, setSortBy] = useState<"alphabetical" | "rating">(
     "alphabetical"
@@ -65,17 +70,14 @@ export function GameList({
         </Select>
       </div>
 
-      {/* Grid de GameCards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sortedGames.map((game) => (
-          <div
-            key={game.id}
-            className="relative z-0 hover:z-10"
-          >
+          <div key={game.id} className="relative z-0 hover:z-10">
             <GameCard
               id={game.id}
               title={game.title}
               coverImage={game.coverImage}
+              genres={game.genres || []}
               ratings={getGameRatings(game.id)}
               onRatingChange={onRatingChange}
               onRemoveGame={onRemoveGame}

@@ -1,4 +1,3 @@
-
 import { StarRating } from './StarRating';
 import { cn } from '@/lib/utils';
 import { X } from 'lucide-react';
@@ -10,10 +9,12 @@ interface PlayerRating {
   playerName: string;
   rating: { playerId: string; rating: number; playerName: string }[];
 }
+
 interface GameCardProps {
   id: string;
   title: string;
   coverImage: string;
+  genres?: string[];
   ratings: { playerId: string; rating: number; playerName: string }[];
   onRatingChange: (gameId: string, playerId: string, rating: number) => void;
   onRemoveGame?: (gameId: string) => void;
@@ -26,6 +27,7 @@ export const GameCard = ({
   id,
   title,
   coverImage,
+  genres,
   ratings,
   onRatingChange,
   onRemoveGame,
@@ -68,9 +70,24 @@ export const GameCard = ({
 
       <div className="p-4 flex flex-col flex-grow">
         <div className="flex-grow">
-          <h3 className="mb-4 text-lg font-bold line-clamp-2 h-14">
+          <h3 className="mb-2 text-lg font-bold line-clamp-2">
             {title}
           </h3>
+          
+          {/* SEÇÃO DE GÊNEROS ADICIONADA */}
+          {genres && genres.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {genres.map((genre, index) => (
+                <span 
+                  key={index}
+                  className="text-xs px-2 py-0.5 bg-muted/50 rounded border border-border/50 text-muted-foreground"
+                >
+                  {genre}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="space-y-2">
             {ratings.map((rating) => (
               <div key={rating.playerId} className="flex items-center justify-between">

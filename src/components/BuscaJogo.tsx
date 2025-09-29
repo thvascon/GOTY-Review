@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from 'react';
 
+interface Genre {
+  id: number;
+  name: string;
+}
+
 interface Game {
   id: number;
   name: string;
   background_image: string;
+  genres: Genre[];
 }
 
-export function BuscaJogo() {
+interface BuscaJogoProps {
+  onGameSelected: (gameData: { title: string; coverImage: string; genres: string[] }) => void;
+}
+
+export function BuscaJogo({ onGameSelected }: BuscaJogoProps) {
   const [termoDeBusca, setTermoDeBusca] = useState('');
-  
   const [resultados, setResultados] = useState<Game[]>([]);
-  
   const [jogoSelecionado, setJogoSelecionado] = useState<Game | null>(null);
 
   const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
@@ -35,10 +43,10 @@ export function BuscaJogo() {
 
     buscarJogos();
     
-  }, [termoDeBusca]);
+  }, [termoDeBusca, API_KEY]);
+
   return (
     <div style={{ fontFamily: 'sans-serif', color: 'white', padding: '20px', maxWidth: '500px', margin: 'auto' }}>
-      
       <h3>Adicionar Novo Jogo</h3>
       
       <input
@@ -55,13 +63,37 @@ export function BuscaJogo() {
             <li
               key={jogo.id}
               onClick={() => {
+                const generosFormatados = jogo.genres.map(g => g.name);
+                onGameSelected({ 
+                  title: jogo.name, 
+                  coverImage: jogo.background_image, 
+                  genres: generosFormatados 
+                });
                 setJogoSelecionado(jogo);
                 setTermoDeBusca('');
                 setResultados([]);
               }}
               style={{ padding: '8px', cursor: 'pointer', borderBottom: '1px solid #444' }}
             >
-              {jogo.name}
+              <div>{jogo.name}</div>
+              {jogo.genres && jogo.genres.length > 0 && (
+                <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                  {jogo.genres.map((genre) => (
+                    <span 
+                      key={genre.id}
+                      style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: '4px',
+                        color: 'rgba(255, 255, 255, 0.7)'
+                      }}
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
             </li>
           ))}
         </ul>
@@ -70,6 +102,24 @@ export function BuscaJogo() {
       {jogoSelecionado && (
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <h4>{jogoSelecionado.name}</h4>
+          {jogoSelecionado.genres && jogoSelecionado.genres.length > 0 && (
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {jogoSelecionado.genres.map((genre) => (
+                <span 
+                  key={genre.id}
+                  style={{
+                    fontSize: '12px',
+                    padding: '4px 10px',
+                    background: 'rgba(0, 0, 0, 0.5)',
+                    borderRadius: '4px',
+                    color: 'white'
+                  }}
+                >
+                  {genre.name}
+                </span>
+              ))}
+            </div>
+          )}
           <img
             src={jogoSelecionado.background_image}
             alt={`Capa do jogo ${jogoSelecionado.name}`}

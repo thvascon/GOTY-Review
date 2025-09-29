@@ -27,6 +27,7 @@ interface Game {
   title: string;
   coverImage: string;
   sectionId?: string;
+  genres?: string[];
 }
 
 interface Rating {
@@ -47,6 +48,7 @@ interface GameWithDetails extends Game {
     playerName: string;
     rating: number;
   }[];
+  genres?: string[];
 }
 
 const Index = () => {
@@ -94,19 +96,20 @@ const Index = () => {
 
         setPlayers(peopleRes.data || []);
         setSections(sectionsRes.data || []);
-        
+
         const sectionsData = sectionsRes.data || [];
         if (sectionsData.length > 0 && !openAccordion) {
-          const geralSection = sectionsData.find(s => s.title === "Gerais");
+          const geralSection = sectionsData.find((s) => s.title === "Gerais");
           setOpenAccordion(geralSection ? geralSection.id : sectionsData[0].id);
         }
-        
+
         setGames(
           (gamesRes.data || []).map((g: any) => ({
             id: g.id,
             title: g.name,
             coverImage: g.cover_image || "/placeholder.svg",
             sectionId: g.section_id,
+            genres: g.genres || [],
           }))
         );
         setRatings(
@@ -222,6 +225,7 @@ const Index = () => {
     title: string;
     coverImage?: string;
     sectionId?: string;
+    genres?: string[];
   }) => {
     const { data, error } = await supabase
       .from("games")
@@ -230,6 +234,7 @@ const Index = () => {
           name: gameData.title,
           cover_image: gameData.coverImage || "/placeholder.svg",
           section_id: gameData.sectionId || null,
+          genres: gameData.genres || [],
         },
       ])
       .select()
@@ -251,6 +256,8 @@ const Index = () => {
           id: data.id,
           title: data.name,
           coverImage: (data as any).cover_image || "/placeholder.svg",
+          sectionId: data.section_id,
+          genres: (data as any).genres || [],
         },
       ]);
 
@@ -363,9 +370,9 @@ const Index = () => {
 
   const getAverageRating = (gameId: string) => {
     const gameRatings = getGameRatings(gameId);
-    const validRatings = gameRatings.filter(r => r.rating > 0);
+    const validRatings = gameRatings.filter((r) => r.rating > 0);
     if (validRatings.length === 0) return 0;
-    
+
     const sum = validRatings.reduce((total, r) => total + r.rating, 0);
     return sum / validRatings.length;
   };
@@ -404,10 +411,10 @@ const Index = () => {
           <main>
             {session ? (
               <>
-                <Accordion 
-                  type="single" 
-                  collapsible 
-                  className="w-full" 
+                <Accordion
+                  type="single"
+                  collapsible
+                  className="w-full"
                   value={openAccordion}
                   onValueChange={setOpenAccordion}
                 >
@@ -440,7 +447,7 @@ const Index = () => {
                       amigos!
                     </p>
                     <AddGameDialog
-                      onAddGame={handleAddGame}
+                      onAddGame={handleAddGame as any}
                       trigger={
                         <Button className="btn-glow">
                           <Plus className="w-4 h-4 mr-2" />

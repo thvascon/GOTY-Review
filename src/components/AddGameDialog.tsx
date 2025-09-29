@@ -31,6 +31,7 @@ interface ApiGame {
   id: number;
   name: string;
   background_image: string;
+  genres: { id: number; name: string }[];
 }
 
 interface Section {
@@ -39,13 +40,14 @@ interface Section {
 }
 
 interface AddGameDialogProps {
-  onAddGame: (game: { title: string; coverImage?: string; sectionId: string }) => void;
+  onAddGame: (game: { title: string; coverImage?: string; sectionId: string; genres: string }) => void;
   trigger?: React.ReactNode;
 }
 
 export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({ title: "", coverImage: "", sectionId: "" });
+  const [selectedGameGenres, setSelectedGameGenres] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -101,8 +103,33 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     }
   };
 
-  const handleGameSelect = (game: ApiGame) => {
+  const handleGameSelect = async (game: ApiGame) => {
     selectionMade.current = true;
+
+    const detailsUrl = `https://api.rawg.io/api/games/${game.id}?key=${API_KEY}`;
+    try {
+      const response = await fetch(detailsUrl);
+      const detailsData = await response.json();
+
+      const generosFormatados = (detailsData.genres || []).map((g: { name: string }) => g.name);
+      setSelectedGameGenres(generosFormatados);
+      setFormData({
+        ...formData,
+        title: detailsData.name,
+        coverImage: detailsData.background_image,
+      });
+      setSearchResults([]);
+    } catch (error) {
+      console.error("Erro ao buscar detalhes do jogo:", error);
+      setFormData({
+        ...formData,
+        title: game.name,
+        coverImage: game.background_image,
+      });
+      setSelectedGameGenres([]);
+      setSearchResults([]);
+    }
+
     setFormData({
       ...formData,
       title: game.name,
@@ -137,16 +164,18 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       onAddGame({
-        title: formData.title.trim(),
-        coverImage: formData.coverImage.trim() || undefined,
-        sectionId: formData.sectionId,
-      });
+        title: formData.title.trim(),
+        coverImage: formData.coverImage.trim() || undefined,
+        sectionId: formData.sectionId,
+        genres: selectedGameGenres as any,
+      });
       toast({
         title: "Jogo adicionado!",
         description: `"${formData.title}" foi adicionado à lista de jogos.`,
         duration: 3000
       });
       setFormData({ title: '', coverImage: '', sectionId: '' });
+      setSelectedGameGenres([]);
       setErrors({});
       setOpen(false);
     } catch (error) {
