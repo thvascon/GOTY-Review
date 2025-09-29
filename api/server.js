@@ -2,7 +2,7 @@ import cors from 'cors';
 import { HowLongToBeatService } from 'howlongtobeat';
 
 const app = express();
-const PORT = 3001;
+const port = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
