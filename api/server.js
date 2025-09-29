@@ -1,8 +1,11 @@
 import cors from 'cors';
 import { HowLongToBeatService } from 'howlongtobeat';
+import express from 'express';
+import cors from 'cors';
+import fetch from 'node-fetch';
 
 const app = express();
-const port = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
