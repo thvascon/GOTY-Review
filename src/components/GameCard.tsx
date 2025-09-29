@@ -19,6 +19,7 @@ interface GameCardProps {
   onRemoveGame?: (gameId: string) => void;
   onClick?: () => void;
   className?: string;
+  loggedInPlayerId?: string; // ID do jogador logado, se houver
 }
 
 export const GameCard = ({
@@ -30,6 +31,7 @@ export const GameCard = ({
   onRemoveGame,
   onClick,
   className,
+  loggedInPlayerId,
 }: GameCardProps) => {
 
   const handleRemoveClick = (e: React.MouseEvent) => {
@@ -77,6 +79,7 @@ export const GameCard = ({
                   rating={rating.rating}
                   onRatingChange={(newRating) => onRatingChange(id, rating.playerId, newRating)}
                   size={14}
+                  disabled={rating.playerId !== loggedInPlayerId} // Só permite mudar se for o jogador logado
                 />
               </div>
             ))}

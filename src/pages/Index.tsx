@@ -6,16 +6,15 @@ import { AddGameDialog } from "@/components/AddGameDialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  GameDetailsModal
-} from "@/components/GameDetailsModal";
+import { GameDetailsModal } from "@/components/GameDetailsModal";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
+import { useAuth } from "@/components/AuthProvider";
+import { Auth } from "@/components/Auth";
 interface Player {
   id: string;
   name: string;
@@ -32,6 +31,7 @@ interface Rating {
   gameId: string;
   playerId: string;
   rating: number;
+  comment?: string;
 }
 
 interface Section {
@@ -48,8 +48,10 @@ interface GameWithDetails extends Game {
 }
 
 const Index = () => {
+  console.log("Objeto supabase DENTRO do Index.tsx:", supabase);
   const { toast } = useToast();
-
+  const { session, profile } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [games, setGames] = useState<Game[]>([]);
   const [ratings, setRatings] = useState<Rating[]>([]);
@@ -58,58 +60,67 @@ const Index = () => {
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
 
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      console.log("Buscando todos os dados em paralelo...");
+
+      // Usamos Promise.all para fazer todas as buscas ao mesmo tempo
+      const [peopleRes, sectionsRes, gamesRes, reviewsRes] = await Promise.all([
+        supabase.from('people').select('*'),
+        supabase.from('sections').select('*'),
+        supabase.from('games').select('*'),
+        supabase.from('reviews').select('*')
+      ]);
+
+      // Verificamos se houve algum erro em qualquer uma das chamadas
+      if (peopleRes.error || sectionsRes.error || gamesRes.error || reviewsRes.error) {
+        console.error("Erro ao buscar dados:", peopleRes.error || sectionsRes.error || gamesRes.error || reviewsRes.error);
+        return; // Sai da função se houver qualquer erro
+      }
+      
+      // Se tudo deu certo, atualizamos os estados com os dados recebidos
+      setPlayers(peopleRes.data || []);
+      setSections(sectionsRes.data || []);
+      setGames((gamesRes.data || []).map((g: any) => ({
+        id: g.id,
+        title: g.name,
+        coverImage: g.cover_image || "/placeholder.svg",
+        sectionId: g.section_id,
+      })));
+      setRatings((reviewsRes.data || []).map((r: any) => ({
+        gameId: r.game_id,
+        playerId: r.person_id,
+        rating: r.rating,
+        comment: r.comment,
+      })));
+
+    } catch (error) {
+      console.error("Erro geral no fetchData:", error);
+    }
+  };
+
+  fetchData();
+
+  const channel = supabase.channel('public-tables')
+    .on('postgres_changes', { event: '*', schema: 'public' }, (payload) => {
+      console.log('Mudança no banco detectada, buscando dados novamente...', payload);
+      fetchData();
+    })
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+
   useEffect(() => {
-    const fetchData = async () => {
-      console.log("Buscando todos os dados...");
-
-      const { data: peopleData } = await supabase.from("people").select("*");
-      const { data: sectionsData } = await supabase
-        .from("sections")
-        .select("*");
-      const { data: gamesData } = await supabase.from("games").select("*");
-      const { data: reviewsData } = await supabase.from("reviews").select("*");
-
-      setPlayers(peopleData || []);
-      setSections(sectionsData || []);
-
-      setGames(
-        (gamesData || []).map((g: any) => ({
-          id: g.id,
-          title: g.name,
-          coverImage: g.cover_image || "/placeholder.svg", 
-          sectionId: g.section_id,
-        }))
-      );
-
-      setRatings(
-        (reviewsData || []).map((r: any) => ({
-          gameId: r.game_id,
-          playerId: r.person_id,
-          rating: r.rating,
-          comment: r.comment, // Novo campo de comentário
-        }))
-      );
-    };
-
-    fetchData();
-
-    const channel = supabase
-      .channel("table-db-changes")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public" }, 
-        (payload) => {
-          console.log("Mudança recebida!", payload);
-          fetchData();
-        }
-      )
-      .subscribe();
-
-    // 4. Limpeza
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    // Se o usuário está logado (session existe) E o modal de login ainda está aberto...
+    if (session && isAuthModalOpen) {
+      // ...então feche o modal.
+      setIsAuthModalOpen(false);
+    }
+  }, [session, isAuthModalOpen]);
 
   const handleCardClick = (game: Game) => {
     const initialDetails: GameWithDetails = {
@@ -121,12 +132,22 @@ const Index = () => {
 
     setIsModalOpen(true);
   };
-
+  
   const handleRatingChange = async (
     gameId: string,
-    playerId: string,
+    _playerId_ignored: string,
     newRating: number
   ) => {
+    if (!profile) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para avaliar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const playerId = profile.id;
     const existing = ratings.find(
       (r) => r.gameId === gameId && r.playerId === playerId
     );
@@ -149,6 +170,7 @@ const Index = () => {
         gameId: r.game_id,
         playerId: r.person_id,
         rating: r.rating,
+        comment: r.comment,
       }))
     );
 
@@ -223,6 +245,7 @@ const Index = () => {
             gameId: r.game_id,
             playerId: r.person_id,
             rating: r.rating,
+            comment: r.comment,
           }))
         );
       }
@@ -264,6 +287,7 @@ const Index = () => {
             gameId: r.game_id,
             playerId: r.person_id,
             rating: r.rating,
+            comment: r.comment,
           }))
         );
       }
@@ -314,80 +338,112 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <Header
-          onAddGame={handleAddGame}
-          onAddPerson={handleAddPerson}
-          existingPersonNames={players.map((p) => p.name)}
-        />
+    <>
+      <Auth open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <Header
+            onAddGame={handleAddGame}
+            onAddPerson={handleAddPerson}
+            existingPersonNames={players.map((p) => p.name)}
+          />
 
-        <main>
-          <Accordion type="single" collapsible className="w-full">
-            {sections.map((section) => (
-              <AccordionItem
-                key={section.id}
-                value={section.id}
-                className="border-b-0 overflow-visible relative"
-              >
-                <AccordionTrigger className="text-2xl font-bold hover:no-underline">
-                  {section.title}
-                </AccordionTrigger>
-                <AccordionContent className="overflow-visible relative">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {games
-                      .filter((game) => game.sectionId === section.id)
-                      .map((game) => (
-                        <div key={game.id} className="relative z-0 hover:z-10">
-                          <GameCard
-                            id={game.id}
-                            title={game.title}
-                            coverImage={game.coverImage}
-                            ratings={getGameRatings(game.id)}
-                            onRatingChange={handleRatingChange}
-                            onRemoveGame={handleRemoveGame}
-                            onClick={() => handleCardClick(game)}
-                          />
-                        </div>
-                      ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-
-          {games.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                <Gamepad2 className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                Nenhum jogo adicionado ainda
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Adicione alguns jogos para começar a avaliar com seus amigos!
-              </p>
-              <AddGameDialog
-                onAddGame={handleAddGame}
-                trigger={
-                  <Button className="btn-glow">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Primeiro Jogo
+          <main>
+            {session ? (
+              <>
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => supabase.auth.signOut()}
+                  >
+                    Sair (Logout)
                   </Button>
-                }
-              />
-            </div>
-          )}
-        </main>
+                </div>
+                <Accordion type="single" collapsible className="w-full">
+                  {sections.map((section) => (
+                    <AccordionItem
+                      key={section.id}
+                      value={section.id}
+                      className="border-b-0 overflow-visible relative"
+                    >
+                      <AccordionTrigger className="text-2xl font-bold hover:no-underline">
+                        {section.title}
+                      </AccordionTrigger>
+                      <AccordionContent className="overflow-visible relative">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                          {games
+                            .filter((game) => game.sectionId === section.id)
+                            .map((game) => (
+                              <div
+                                key={game.id}
+                                className="relative z-0 hover:z-10"
+                              >
+                                <GameCard
+                                  id={game.id}
+                                  title={game.title}
+                                  coverImage={game.coverImage}
+                                  ratings={getGameRatings(game.id)}
+                                  onRatingChange={handleRatingChange}
+                                  onRemoveGame={handleRemoveGame}
+                                  onClick={() => handleCardClick(game)}
+                                  loggedInPlayerId={profile?.id} // Passa o ID do jogador logado
+                                />
+                              </div>
+                            ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+
+                {games.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                      <Gamepad2 className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      Nenhum jogo adicionado ainda
+                    </h3>
+                    <p className="text-muted-foreground mb-6">
+                      Adicione alguns jogos para começar a avaliar com seus
+                      amigos!
+                    </p>
+                    <AddGameDialog
+                      onAddGame={handleAddGame}
+                      trigger={
+                        <Button className="btn-glow">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Primeiro Jogo
+                        </Button>
+                      }
+                    />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-24">
+                <h2 className="text-2xl font-bold mb-4">
+                  Bem-vindo ao Game Review da Galera!
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Faça login para ver, adicionar e avaliar jogos.
+                </p>
+                <Button onClick={() => setIsAuthModalOpen(true)}>
+                  Fazer Login ou Cadastrar
+                </Button>
+              </div>
+            )}
+          </main>
+        </div>
+        <GameDetailsModal
+          game={selectedGameDetails}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          players={players}
+          allReviews={ratings}
+        />
       </div>
-      <GameDetailsModal
-        game={selectedGameDetails}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        players={players}
-        allReviews={ratings}
-      />
-    </div>
+    </>
   );
 };
 

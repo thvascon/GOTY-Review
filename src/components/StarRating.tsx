@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Star } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from "react";
+import { Star } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
   rating: number;
@@ -8,22 +8,24 @@ interface StarRatingProps {
   maxRating?: number;
   size?: number;
   className?: string;
+  disabled?: boolean;
 }
 
-export const StarRating = ({ 
-  rating, 
-  onRatingChange, 
-  maxRating = 10, 
+export const StarRating = ({
+  rating,
+  onRatingChange,
+  disabled = false,
+  maxRating = 10,
   size = 16,
-  className 
+  className,
 }: StarRatingProps) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
 
   const getRatingColor = (currentRating: number) => {
-    if (currentRating === 0) return 'star-unplayed';
-    if (currentRating >= 8) return 'star-excellent';
-    if (currentRating >= 6) return 'star-good';
-    return 'star-poor';
+    if (currentRating === 0) return "star-unplayed";
+    if (currentRating >= 8) return "star-excellent";
+    if (currentRating >= 6) return "star-good";
+    return "star-poor";
   };
 
   const displayRating = hoveredRating !== null ? hoveredRating : rating;
@@ -35,24 +37,33 @@ export const StarRating = ({
         {Array.from({ length: maxRating }, (_, index) => {
           const starValue = index + 1;
           const isFilled = starValue <= displayRating;
-          
+
           return (
             <button
               key={index}
               type="button"
+              disabled={disabled}
               className={cn(
-                "transition-all duration-200 hover:scale-110",
+                "transition-all duration-200",
+                !disabled && "hover:scale-110",
+                disabled && "cursor-not-allowed",
                 colorClass
               )}
-              onMouseEnter={() => setHoveredRating(starValue)}
-              onMouseLeave={() => setHoveredRating(null)}
+              onMouseEnter={
+                !disabled ? () => setHoveredRating(starValue) : undefined
+              }
+              onMouseLeave={
+                !disabled ? () => setHoveredRating(null) : undefined
+              }
               onClick={(event) => {
-                event.stopPropagation();
-                // Se clicar na mesma estrela que já está selecionada, remove a avaliação
-                if (starValue === rating) {
-                  onRatingChange(0);
-                } else {
-                  onRatingChange(starValue);
+                if (!disabled) {
+                  event.stopPropagation();
+                  // Se clicar na mesma estrela que já está selecionada, remove a avaliação
+                  if (starValue === rating) {
+                    onRatingChange(0);
+                  } else {
+                    onRatingChange(starValue);
+                  }
                 }
               }}
             >
@@ -60,15 +71,22 @@ export const StarRating = ({
                 size={size}
                 className={cn(
                   "transition-all duration-200",
-                  isFilled ? "fill-current" : "fill-transparent stroke-current opacity-60"
+                  isFilled
+                    ? "fill-current"
+                    : "fill-transparent stroke-current opacity-60"
                 )}
               />
             </button>
           );
         })}
       </div>
-      <span className={cn("ml-2 text-sm font-medium tabular-nums flex-shrink-0", colorClass)}>
-        {displayRating > 0 ? `${displayRating}/10` : ''}
+      <span
+        className={cn(
+          "ml-2 text-sm font-medium tabular-nums flex-shrink-0",
+          colorClass
+        )}
+      >
+        {displayRating > 0 ? `${displayRating}/10` : ""}
       </span>
     </div>
   );
