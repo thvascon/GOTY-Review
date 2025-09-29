@@ -201,6 +201,16 @@ const Index = () => {
       }))
     );
 
+    if (isModalOpen && selectedGameDetails) {
+      const updatedRatings = getGameRatings(selectedGameDetails.id);
+
+      setSelectedGameDetails({
+        ...selectedGameDetails,
+        ratings: updatedRatings,
+      });
+    }
+    
+
     const game = games.find((g) => g.id === gameId);
     const player = players.find((p) => p.id === playerId);
 
@@ -278,6 +288,7 @@ const Index = () => {
             rating: r.rating,
             comment: r.comment,
           }))
+          
         );
       }
     }
@@ -364,6 +375,7 @@ const Index = () => {
         playerId: player.id,
         playerName: player.name,
         rating: rating?.rating || 0,
+        comment: rating?.comment || "",
       };
     });
   };

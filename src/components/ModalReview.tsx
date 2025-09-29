@@ -63,7 +63,8 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
     const { error } = await supabase.from('reviews').upsert({
       game_id: gameId,
-      person_id: profile.id, 
+      person_id: profile.id,
+      rating: userRating,
       comment: userComment,
     } as any, {
       onConflict: ['person_id', 'game_id'] as any,
@@ -85,6 +86,7 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
   return (
     <div className="flex flex-col gap-6">
+      {/* SEÇÃO 1: SUA AVALIAÇÃO */}
       {session && profile ? (
         <div className="p-4 bg-card rounded-lg border">
           <h2 className="text-lg font-semibold mb-3">
@@ -117,6 +119,7 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
         </div>
       )}
 
+      {/* SEÇÃO 2: COMENTÁRIOS DA GALERA */}
       <div>
         <h2 className="text-lg font-semibold mb-3">
           Comentários da Galera ({reviewsWithUserNames.length})

@@ -130,6 +130,7 @@ export const GameDetailsModal = ({
                       </span>
                     </div>
 
+                    {/* Completacionista */}
                     <div className="flex items-center py-2.5 px-3 rounded-md bg-muted/50">
                       <div className="flex items-center gap-2">
                         <Trophy className="w-4 h-4 text-muted-foreground" />
@@ -156,6 +157,7 @@ export const GameDetailsModal = ({
                   </div>
                 )}
 
+                {/* Footer */}
                 <p className="text-xs text-muted-foreground mt-4 pt-3 border-t text-center">
                   Fonte: HowLongToBeat.com
                 </p>
