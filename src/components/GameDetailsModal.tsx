@@ -1,57 +1,79 @@
-// Arquivo: src/components/GameDetailsModal.tsx (Versão Final com RAWG)
-
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ModalReview } from './ModalReview';
-import { Clock, Loader2 } from 'lucide-react'; // Ícones
+import { Clock, Plus, Trophy, Loader2, AlertCircle } from 'lucide-react';
 
-// ... suas outras interfaces ...
+interface HLTBEntry {
+  id: number;
+  name: string;
+  main: number;
+  mainExtra: number;
+  completionist: number;
+}
 
-export const GameDetailsModal = ({ game, isOpen, onClose, players, allReviews }) => {
-  // Estados para os dados que vêm da API da RAWG
-  const [description, setDescription] = useState("");
-  const [playtime, setPlaytime] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+interface Game {
+  id: string;
+  title: string;
+  coverImage: string;
+}
 
-  // Lembre-se de colocar a chave no seu .env.local e acessá-la aqui
-  const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
+interface GameDetailsModalProps {
+  game: Game | null;
+  isOpen: boolean;
+  onClose: () => void;
+  players: any[];
+  allReviews: any[];
+}
+
+export const GameDetailsModal = ({ 
+  game, 
+  isOpen, 
+  onClose, 
+  players, 
+  allReviews 
+}: GameDetailsModalProps) => {
+  const [hltbData, setHltbData] = useState<HLTBEntry | null>(null);
+  const [isHltbLoading, setIsHltbLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Busca os detalhes do jogo na RAWG quando o modal abre
     if (isOpen && game) {
-      const fetchGameDetails = async () => {
-        setIsLoading(true);
-        setDescription("");
-        setPlaytime(null);
-
+      const fetchHltbData = async () => {
+        setIsHltbLoading(true);
+        setHltbData(null);
+        setError(null);
+        
         try {
-          // A API da RAWG é ótima para buscar por IDs, então primeiro encontramos o ID pelo título
-          const searchRes = await fetch(`https://api.rawg.io/api/games?key=${API_KEY}&search=${encodeURIComponent(game.title)}&page_size=1`);
-          const searchData = await searchRes.json();
-          const gameIdFromApi = searchData.results?.[0]?.id;
-
-          if (gameIdFromApi) {
-            // Com o ID, buscamos os detalhes completos
-            const detailsRes = await fetch(`https://api.rawg.io/api/games/${gameIdFromApi}?key=${API_KEY}`);
-            const fullDetails = await detailsRes.json();
-            
-            setDescription(fullDetails.description_raw || "Descrição não encontrada.");
-            setPlaytime(fullDetails.playtime || 0);
-          } else {
-            setDescription("Descrição não encontrada.");
-            setPlaytime(0);
+          const response = await fetch(
+            `http://localhost:3001/api/hltb?title=${encodeURIComponent(game.title)}`
+          );
+          
+          if (!response.ok) {
+            throw new Error('Erro ao buscar dados');
           }
-        } catch (error) {
-          console.error("Erro ao buscar detalhes do jogo na RAWG:", error);
-          setDescription("Falha ao carregar a descrição.");
+          
+          const data = await response.json();
+          
+          if (data && data.length > 0) {
+            setHltbData(data[0]);
+          } else {
+            setError('Jogo não encontrado');
+          }
+        } catch (err) {
+          console.error("Erro ao buscar dados do HLTB:", err);
+          setError('Erro ao conectar com o servidor');
         } finally {
-          setIsLoading(false);
+          setIsHltbLoading(false);
         }
       };
-
-      fetchGameDetails();
+      
+      fetchHltbData();
     }
-  }, [isOpen, game]); // Roda sempre que o modal abre com um novo jogo
+  }, [isOpen, game]);
+
+  const formatHours = (hours: number) => {
+    return hours > 0 ? `${hours}h` : '--';
+  };
 
   if (!game) return null;
 
@@ -71,24 +93,78 @@ export const GameDetailsModal = ({ game, isOpen, onClose, players, allReviews })
                 className="w-full h-auto rounded-lg shadow-lg" 
               />
 
-              {/* SEÇÃO DO TEMPO DE JOGO (vindo da RAWG) */}
-              <div className="p-4 bg-card rounded-lg border">
-                <h3 className="font-semibold mb-2 text-lg">Tempo de Jogo</h3>
-                {isLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Buscando...
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="flex items-center gap-2 text-muted-foreground"><Clock size={14} /> História Principal</span>
-                    <span className="font-bold">{playtime > 0 ? `${playtime} Horas` : 'N/A'}</span>
+              <div className="p-4 bg-card rounded-lg border shadow-sm">
+                <h3 className="font-semibold mb-4 text-base flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  Tempo para Terminar
+                </h3>
+
+                {isHltbLoading && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Buscando...</span>
                   </div>
                 )}
+
+                {!isHltbLoading && hltbData && (
+                  <div className="space-y-3">
+                    <div className="flex items-center py-2.5 px-3 rounded-md bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">História</span>
+                      </div>
+                      <div className="flex-grow" />
+                      <span className="font-bold text-sm">
+                        {formatHours(hltbData.main)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center py-2.5 px-3 rounded-md bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <Plus className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">Main + Extras</span>
+                      </div>
+                      <div className="flex-grow" />
+                      <span className="font-bold text-sm">
+                        {formatHours(hltbData.mainExtra)}
+                      </span>
+                    </div>
+
+                    {/* Completacionista */}
+                    <div className="flex items-center py-2.5 px-3 rounded-md bg-muted/50">
+                      <div className="flex items-center gap-2">
+                        <Trophy className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">100%</span>
+                      </div>
+                      <div className="flex-grow" />
+                      <span className="font-bold text-sm">
+                        {formatHours(hltbData.completionist)}
+                      </span>
+                    </div>
+
+                    {hltbData.name && hltbData.name !== game.title && (
+                      <p className="text-xs text-muted-foreground pt-2 border-t mt-3">
+                        Dados de: <span className="font-medium">{hltbData.name}</span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {!isHltbLoading && !hltbData && (
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground py-4">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>{error || 'Dados não encontrados.'}</span>
+                  </div>
+                )}
+
+                {/* Footer */}
+                <p className="text-xs text-muted-foreground mt-4 pt-3 border-t text-center">
+                  Fonte: HowLongToBeat.com
+                </p>
               </div>
             </div>
 
             <div className="md:w-2/3">
-              {/* O seu componente de review continua funcionando perfeitamente aqui */}
               <ModalReview 
                 gameId={game.id}
                 gameTitle={game.title}
