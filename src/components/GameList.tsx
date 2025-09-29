@@ -54,7 +54,6 @@ export function GameList({
 
   return (
     <div className="space-y-4">
-      {/* Select para escolher a ordenação */}
       <div className="flex justify-end">
         <Select
           value={sortBy}
@@ -70,9 +69,9 @@ export function GameList({
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
         {sortedGames.map((game) => (
-          <div key={game.id} className="relative z-0 hover:z-10">
+          <div key={game.id} className="relative z-0 hover:z-10 h-full">
             <GameCard
               id={game.id}
               title={game.title}

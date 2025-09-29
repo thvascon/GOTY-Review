@@ -209,7 +209,6 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          {/* Título */}
           <div className="space-y-2 relative">
             <Label htmlFor="title">Título do Jogo *</Label>
             <Input

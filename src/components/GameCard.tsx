@@ -69,12 +69,11 @@ export const GameCard = ({
       </div>
 
       <div className="p-4 flex flex-col flex-grow">
-        <div className="flex-grow">
+        <div className="mb-4 h-56">
           <h3 className="mb-2 text-lg font-bold line-clamp-2">
             {title}
           </h3>
           
-          {/* SEÇÃO DE GÊNEROS ADICIONADA */}
           {genres && genres.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
               {genres.map((genre, index) => (
