@@ -45,7 +45,7 @@ export const GameDetailsModal = ({
         
         try {
           const response = await fetch(
-            `http://localhost:3001/api/hltb?title=${encodeURIComponent(game.title)}`
+            `${import.meta.env.VITE_BACK_END_URL}/api/hltb?title=${encodeURIComponent(game.title)}`
           );
           
           if (!response.ok) {
