@@ -64,6 +64,7 @@ const Index = () => {
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -209,7 +210,6 @@ const Index = () => {
         ratings: updatedRatings,
       });
     }
-    
 
     const game = games.find((g) => g.id === gameId);
     const player = players.find((p) => p.id === playerId);
@@ -288,7 +288,6 @@ const Index = () => {
             rating: r.rating,
             comment: r.comment,
           }))
-          
         );
       }
     }
@@ -392,6 +391,9 @@ const Index = () => {
   const renderGameCardsForSection = (sectionId: string) => {
     const sectionGames = games
       .filter((game) => game.sectionId === sectionId)
+      .filter((game) =>
+        game.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
       .map((game) => ({
         ...game,
         averageRating: getAverageRating(game.id),
@@ -418,6 +420,8 @@ const Index = () => {
             onAddGame={handleAddGame}
             onAddPerson={handleAddPerson}
             existingPersonNames={players.map((p) => p.name)}
+            searchTerm={searchTerm}
+            onSearchTerm={setSearchTerm}
           />
 
           <main>

@@ -4,6 +4,7 @@ import { AddPersonDialog } from "./AddPersonDialog";
 import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 interface HeaderProps {
@@ -11,6 +12,9 @@ interface HeaderProps {
   onAddPerson: (person: { name: string }) => void;
   existingPersonNames: string[];
   className?: string;
+  searchTerm?: string;
+  onSearchTerm?: (value: string) => void;
+  
 }
 
 export const Header = ({
@@ -18,6 +22,8 @@ export const Header = ({
   onAddPerson,
   existingPersonNames,
   className,
+  searchTerm,
+  onSearchTerm,
 }: HeaderProps) => {
   return (
     <header
@@ -40,6 +46,14 @@ export const Header = ({
         >
           <LogOut className="w-5 h-5" />
         </Button>
+      </div>
+      <div className="w-full sm:w-64">
+        <Input 
+          type="text"
+          placeholder="Buscar jogo..."
+          value={searchTerm}
+          onChange={(e) => onSearchTerm(e.target.value)}
+        />
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 sm:w-auto w-full">
