@@ -7,11 +7,14 @@ interface Profile {
   id: string;
   name: string;
   user_id: string;
+  avatar_url?: string;
+  created_at: string;
 }
 
 const AuthContext = createContext<{
   session: Session | null;
   profile: Profile | null;
+  loading?: boolean
 }>({ session: null, profile: null });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -30,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session) {
         const { data: userProfile } = await supabase
           .from("people")
-          .select("id, name, user_id")
+          .select("id, name, user_id, avatar_url, created_at")
           .eq("user_id", session.user.id)
           .maybeSingle();
         setProfile(userProfile);
@@ -44,22 +47,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (!session) {
-        setProfile(null);
-      } else {
+      setProfile(null);
+      if (session) {
         fetchSessionAndProfile();
-      }
+      } 
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  if (loading) {
-    return <div>Carregando...</div>;
-  }
-
   return (
-    <AuthContext.Provider value={{ session, profile }}>
+    <AuthContext.Provider value={{ session, profile, loading }}>
       {children}
     </AuthContext.Provider>
   );

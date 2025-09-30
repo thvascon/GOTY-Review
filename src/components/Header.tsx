@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -13,8 +14,8 @@ interface HeaderProps {
   existingPersonNames: string[];
   className?: string;
   searchTerm?: string;
+  session: any;
   onSearchTerm?: (value: string) => void;
-  
 }
 
 export const Header = ({
@@ -48,7 +49,7 @@ export const Header = ({
         </Button>
       </div>
       <div className="w-full sm:w-64">
-        <Input 
+        <Input
           type="text"
           placeholder="Buscar jogo..."
           value={searchTerm}
@@ -62,6 +63,9 @@ export const Header = ({
           onAddPerson={onAddPerson}
           existingNames={existingPersonNames}
         />
+        <Button asChild variant="outline">
+          <Link to="/profile">Meu Perfil</Link>
+        </Button> 
       </div>
       <div className="">
         <Button

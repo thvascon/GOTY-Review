@@ -422,6 +422,7 @@ const Index = () => {
             existingPersonNames={players.map((p) => p.name)}
             searchTerm={searchTerm}
             onSearchTerm={setSearchTerm}
+            session={session}
           />
 
           <main>
