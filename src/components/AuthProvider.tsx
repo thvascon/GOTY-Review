@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
 
@@ -14,14 +14,24 @@ interface Profile {
 const AuthContext = createContext<{
   session: Session | null;
   profile: Profile | null;
-  loading?: boolean
-}>({ session: null, profile: null });
+  loading?: boolean;
+  refetchProfile: () => void;
+}>({ session: null, profile: null, loading: true, refetchProfile: () => {} });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   console.log("Objeto supabase DENTRO do AuthProvider:", supabase);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = useCallback(async (currentSession: Session) => {
+    const { data: userProfile } = await supabase
+      .from('people')
+      .select('id, name, user_id, avatar_url, created_at')
+      .eq('user_id', currentSession.user.id)
+      .maybeSingle();
+    setProfile(userProfile);
+  }, [])
 
   useEffect(() => {
     const fetchSessionAndProfile = async () => {
@@ -56,8 +66,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const refetchProfile = useCallback(async () => {
+    if (session) {
+      await fetchProfile(session)
+    }
+  }, [session, fetchProfile])
+
   return (
-    <AuthContext.Provider value={{ session, profile, loading }}>
+    <AuthContext.Provider value={{ session, profile, loading, refetchProfile}}>
       {children}
     </AuthContext.Provider>
   );

@@ -8,9 +8,24 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { ProfileHeader } from "@/components/ProfileHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Gamepad2, Star, Calendar } from "lucide-react";
+import { Loader2, Gamepad2, Star, Calendar, Edit } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface UserReview {
   created_at: string;
@@ -24,10 +39,11 @@ interface UserReview {
 }
 
 const Profile = () => {
-  const { session, profile, loading: authLoading } = useAuth();
+  const { session, profile, loading: authLoading, refetchProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,14 +52,14 @@ const Profile = () => {
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
 
-  // Redireciona se o usuário não estiver logado
+  const [sortBy, setSortBy] = useState("recent");
+
   useEffect(() => {
     if (!authLoading && !session) {
       navigate("/");
     }
   }, [session, authLoading, navigate]);
 
-  // Preenche o formulário com os dados do perfil quando ele carregar
   useEffect(() => {
     if (profile) {
       setName(profile.name || "");
@@ -51,18 +67,16 @@ const Profile = () => {
     }
   }, [profile]);
 
-  // useEffect para buscar as avaliações do usuário
   useEffect(() => {
     if (profile) {
       const fetchReviews = async () => {
         setReviewsLoading(true);
-        // Busca na tabela 'reviews' e pede para trazer os dados da tabela 'games' junto
         const { data, error } = await supabase
           .from("reviews")
           .select("created_at, rating, comment, games(id, name, cover_image)")
           .eq("person_id", profile.id)
           .gt("rating", 0)
-          .order("created_at", { ascending: false }); // Ordena pelas mais recentes
+          .order("created_at", { ascending: false });
 
         if (error) {
           console.error("Erro ao buscar avaliações:", error);
@@ -94,8 +108,6 @@ const Profile = () => {
     return { total, average, memberSince };
   }, [reviews, profile]);
 
-  const reviewsToShow = showAllReviews ? reviews : reviews.slice(0, 3);
-
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
@@ -117,66 +129,124 @@ const Profile = () => {
       });
     } else {
       toast({ title: "Sucesso!", description: "Seu perfil foi atualizado." });
+      await refetchProfile();
+      setIsEditModalOpen(false);
     }
     setIsSubmitting(false);
   };
+
+  const sortedReviews = useMemo(() => {
+    const sorted = [...reviews];
+
+    if (sortBy === "highest") {
+      sorted.sort((a, b) => b.rating - a.rating);
+    } else if (sortBy === "lowest") {
+      sorted.sort((a, b) => a.rating - b.rating);
+    } else if (sortBy === "alphabetical") {
+      sorted.sort(
+        (a, b) => a.games?.name.localeCompare(b.games?.name || "") || 0
+      );
+    }
+    return sorted;
+  }, [reviews, sortBy]);
+
+  const reviewsToShow = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);
+  const bannerImage = sortedReviews[0]?.games.cover_image;
 
   if (authLoading || !profile) {
     return <div className="p-8 text-center">Carregando perfil...</div>;
   }
 
   return (
-    <div className="container mx-auto max-w-4xl py-8">
-      <div className="flex items-center gap-6 mb-10">
-        <Avatar className="w-24 h-24 border-2 border-primary">
-          <AvatarImage src={profile.avatar_url} alt={profile.name} />
-          <AvatarFallback className="text-3xl">
-            {profile.name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h1 className="text-4xl font-bold">{profile.name}</h1>
-          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Gamepad2 size={14} /> {stats.total} jogos avaliados
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Star size={14} /> {stats.average} média
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar size={14} /> Desde {stats.memberSince}
-            </span>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <ProfileHeader
+        profile={{
+          name: profile.name,
+          avatar_url: profile.avatar_url ?? null,
+        }}
+        stats={stats}
+        bannerImage={bannerImage}
+        onEditClick={() => setIsEditModalOpen(true)}
+      />
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4">
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="w-[95vw] max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Perfil</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="avatar-url">URL do Avatar</Label>
+              <Input
+                id="avatar-url"
+                type="url"
+                value={avatarUrl || ""}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome de Exibição</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
+                Salvar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <div className="container mx-auto max-w-6xl px-4 md:px-6 lg:px-8 py-6 md:py-8">
+        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
           Jogos Avaliados ({stats.total})
         </h2>
+        
+        <div className="mb-4 md:mb-6">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Ordenar por..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent">Mais Recentes</SelectItem>
+              <SelectItem value="highest">Maiores Notas</SelectItem>
+              <SelectItem value="lowest">Menores Notas</SelectItem>
+              <SelectItem value="alphabetical">Ordem Alfabética</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {reviewsLoading ? (
           <p className="text-muted-foreground">Carregando avaliações...</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {reviewsToShow.map(
               (review) =>
                 review.games && (
                   <div
                     key={review.games.id}
-                    className="flex gap-4 p-4 bg-card border rounded-lg"
+                    className="flex flex-col sm:flex-row gap-3 md:gap-4 p-3 md:p-4 bg-card border rounded-lg transition-all hover:bg-muted hover:scale-[1.02]"
                   >
                     <img
                       src={review.games.cover_image || "/placeholder.svg"}
                       alt={review.games.name}
-                      className="w-24 h-32 object-cover rounded-md"
+                      className="w-full sm:w-24 md:w-32 h-32 object-cover rounded-md flex-shrink-0"
                     />
-                    <div className="flex-grow">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">
+                    <div className="flex-grow space-y-2">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                        <div className="flex-grow">
+                          <h3 className="font-bold text-base md:text-lg">
                             {review.games.name}
                           </h3>
-                          <p className="text-sm text-muted-foreground mt-2 italic">
+                          <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2 italic line-clamp-3 sm:line-clamp-none">
                             {review.comment || "Nenhum comentário detalhado."}
                           </p>
                         </div>
@@ -184,14 +254,14 @@ const Profile = () => {
                           <StarRating
                             rating={review.rating}
                             onRatingChange={() => {}}
-                            size={16}
+                            size={14}
                             disabled
                           />
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-4">
+                      <p className="text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5">
-                          <Calendar size={14} />
+                          <Calendar size={12} className="md:w-[14px] md:h-[14px]" />
                           Avaliado em{" "}
                           {new Date(review.created_at).toLocaleDateString(
                             "pt-BR"
@@ -202,7 +272,6 @@ const Profile = () => {
                   </div>
                 )
             )}
-
             {!showAllReviews && reviews.length > 3 && (
               <Button
                 variant="outline"
