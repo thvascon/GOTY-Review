@@ -30,6 +30,7 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const reviewsWithUserNames = useMemo(() => {
     return reviews
@@ -44,12 +45,15 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
   }, [reviews, players]);
 
   useEffect(() => {
-    if (profile) {
-      const existingReview = reviews.find(r => r.playerId === profile.id);
-      setUserRating(existingReview?.rating || 0);
-      setUserComment(existingReview?.comment || '');
+    if (profile &&  !justSubmitted) {
+      const myReview = reviews.find(r => r.playerId === profile.id);
+      setUserRating(myReview?.rating || 0);
+      setUserComment(myReview?.comment ?? '');
+    } else {
+      setUserRating(0);
+      setUserComment('');
     }
-  }, [profile, reviews]);
+  }, [profile, reviews, justSubmitted]);
 
   const handleSubmit = async () => {
     if (!profile) {
@@ -79,8 +83,12 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
     } else {
       toast({ 
         title: "Avaliação salva com sucesso!", 
-        duration: 2000 
+        duration: 2000
       });
+      setUserRating(0);
+      setUserComment('');
+      setJustSubmitted(true);
+      setTimeout(() => setJustSubmitted(false), 3000);
     }
   };
 
