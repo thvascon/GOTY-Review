@@ -24,7 +24,6 @@ export const ProfileHeader = ({
 }: ProfileHeaderProps) => {
   return (
     <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 overflow-hidden">
-      {/* Imagem de fundo com desfoque */}
       <div className="absolute inset-0 overflow-hidden">
         {bannerImage && (
           <img
@@ -35,10 +34,8 @@ export const ProfileHeader = ({
         )}
       </div>
 
-      {/* Gradiente escurecendo a imagem */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-background/60 to-background" />
 
-      {/* Conteúdo do perfil */}
       <div className="relative h-full w-full flex items-end pb-6 md:pb-8">
         <div className="container mx-auto max-w-6xl px-4 md:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-6 w-full items-center md:items-start">
