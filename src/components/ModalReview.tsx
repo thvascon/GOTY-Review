@@ -30,7 +30,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
-  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const reviewsWithUserNames = useMemo(() => {
     return reviews
@@ -43,17 +42,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
       })
       .filter(review => review.rating > 0);
   }, [reviews, players]);
-
-  useEffect(() => {
-    if (profile &&  !justSubmitted) {
-      const myReview = reviews.find(r => r.playerId === profile.id);
-      setUserRating(myReview?.rating || 0);
-      setUserComment(myReview?.comment ?? '');
-    } else {
-      setUserRating(0);
-      setUserComment('');
-    }
-  }, [profile, reviews, justSubmitted]);
 
   const handleSubmit = async () => {
     if (!profile) {
@@ -87,8 +75,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
       });
       setUserRating(0);
       setUserComment('');
-      setJustSubmitted(true);
-      setTimeout(() => setJustSubmitted(false), 3000);
     }
   };
 
