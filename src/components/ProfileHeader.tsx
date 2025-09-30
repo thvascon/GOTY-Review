@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Gamepad2, Star, Calendar, Edit } from "lucide-react";
+import { Gamepad2, Star, Calendar, Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface ProfileHeaderProps {
   profile: {
@@ -24,6 +25,11 @@ export const ProfileHeader = ({
 }: ProfileHeaderProps) => {
   return (
     <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 overflow-hidden">
+        <Button asChild variant="ghost" size="icon" className="md:hidden absolute top-4 left-4 z-20 text-white">
+        <Link to="/">
+          <ArrowLeft />
+        </Link>
+      </Button>
       <div className="absolute inset-0 overflow-hidden">
         {bannerImage && (
           <img

@@ -1,7 +1,7 @@
 // Arquivo: src/pages/Profile.tsx
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { ProfileHeader } from "@/components/ProfileHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Gamepad2, Star, Calendar, Edit } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
+import { ArrowLeft } from "lucide-react"; // Opcional: ícone de seta
 import {
   Select,
   SelectContent,
@@ -150,7 +151,9 @@ const Profile = () => {
     return sorted;
   }, [reviews, sortBy]);
 
-  const reviewsToShow = showAllReviews ? sortedReviews : sortedReviews.slice(0, 3);
+  const reviewsToShow = showAllReviews
+    ? sortedReviews
+    : sortedReviews.slice(0, 3);
   const bannerImage = sortedReviews[0]?.games.cover_image;
 
   if (authLoading || !profile) {
@@ -159,6 +162,12 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+        <Button asChild variant="ghost" className="hidden md:inline-flex absolute top-4 left-4 z-20">
+        <Link to="/">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar para a Página Inicial
+        </Link>
+      </Button>
       <ProfileHeader
         profile={{
           name: profile.name,
@@ -168,7 +177,7 @@ const Profile = () => {
         bannerImage={bannerImage}
         onEditClick={() => setIsEditModalOpen(true)}
       />
-
+      
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <DialogContent className="w-[95vw] max-w-md mx-auto">
           <DialogHeader>
@@ -209,7 +218,7 @@ const Profile = () => {
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
           Jogos Avaliados ({stats.total})
         </h2>
-        
+
         <div className="mb-4 md:mb-6">
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -261,7 +270,10 @@ const Profile = () => {
                       </div>
                       <p className="text-xs text-muted-foreground">
                         <span className="flex items-center gap-1.5">
-                          <Calendar size={12} className="md:w-[14px] md:h-[14px]" />
+                          <Calendar
+                            size={12}
+                            className="md:w-[14px] md:h-[14px]"
+                          />
                           Avaliado em{" "}
                           {new Date(review.created_at).toLocaleDateString(
                             "pt-BR"
