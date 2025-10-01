@@ -48,7 +48,7 @@ export const Header = ({
           <LogOut className="w-5 h-5" />
         </Button>
       </div>
-      <div className="w-full sm:w-64">
+      <div className="w-full sm:w-96">
         <Input
           type="text"
           placeholder="Buscar jogo..."
