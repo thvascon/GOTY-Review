@@ -1,5 +1,3 @@
-// Arquivo: src/pages/Profile.tsx
-
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
@@ -12,7 +10,10 @@ import { ProfileHeader } from "@/components/ProfileHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2, Gamepad2, Star, Calendar, Edit } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
-import { ArrowLeft } from "lucide-react"; // Opcional: ícone de seta
+import { ArrowLeft } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,

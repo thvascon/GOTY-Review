@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { GameDetailsModal } from "@/components/GameDetailsModal";
+import { Login } from "@/components/Login";
+import { ProfileSetup } from "@/components/ProfileSetup";
 import {
   Accordion,
   AccordionContent,
@@ -52,9 +54,8 @@ interface GameWithDetails extends Game {
 }
 
 const Index = () => {
-  console.log("Objeto supabase DENTRO do Index.tsx:", supabase);
+  const { session, profile, loading } = useAuth();
   const { toast } = useToast();
-  const { session, profile } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
   const [games, setGames] = useState<Game[]>([]);
@@ -67,7 +68,8 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (session && profile && profile.name !== session.user.email) {
+      const fetchData = async () => {
       try {
         console.log("Buscando todos os dados em paralelo...");
 
@@ -142,7 +144,9 @@ const Index = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+    }
+    
+  }, [session, profile]);
 
   useEffect(() => {
     if (session && isAuthModalOpen) {
@@ -410,6 +414,19 @@ const Index = () => {
       />
     );
   };
+
+    if (loading) {
+    return <div className="p-8 text-center">Carregando...</div>;
+  }
+
+  if (!session) {
+    return <Login />;
+  }
+
+
+  if (profile && session.user.email === profile.name) {
+    return <ProfileSetup />;
+  }
 
   return (
     <>
