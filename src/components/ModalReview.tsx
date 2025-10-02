@@ -82,7 +82,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
 
   return (
     <div className="flex flex-col gap-6">
-      {/* SEÇÃO 1: SUA AVALIAÇÃO */}
       {session && profile ? (
         <div className="p-4 bg-card rounded-lg border">
           <h2 className="text-lg font-semibold mb-3">
@@ -115,7 +114,6 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
         </div>
       )}
 
-      {/* SEÇÃO 2: COMENTÁRIOS DA GALERA */}
       <div>
         <h2 className="text-lg font-semibold mb-3">
           Comentários da Galera ({reviewsWithUserInfo.length})

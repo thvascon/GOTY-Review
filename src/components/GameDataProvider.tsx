@@ -54,7 +54,6 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Se já foi buscado uma vez, não mostra loading
     if (isFetched) {
       setLoading(false);
     } else {
@@ -107,7 +106,6 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchData();
 
-    // Configura realtime apenas para mudanças reais
     const channel = supabase
       .channel("game-data-changes")
       .on("postgres_changes", { 

@@ -23,7 +23,7 @@ interface GameCardProps {
   onClick?: () => void;
   className?: string;
   loggedInPlayerId?: string;
-  index?: number; // Para animação escalonada
+  index?: number;
 }
 
 export const GameCard = ({

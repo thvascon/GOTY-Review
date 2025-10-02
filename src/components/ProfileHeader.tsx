@@ -15,7 +15,7 @@ interface ProfileHeaderProps {
   };
   bannerImage: string | null | undefined;
   onEditClick: () => void;
-  showEditButton?: boolean; // Nova prop
+  showEditButton?: boolean;
 }
 
 export const ProfileHeader = ({
@@ -23,7 +23,7 @@ export const ProfileHeader = ({
   stats,
   bannerImage,
   onEditClick,
-  showEditButton = true, // Por padrão mostra o botão
+  showEditButton = true, 
 }: ProfileHeaderProps) => {
   return (
     <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 overflow-hidden">

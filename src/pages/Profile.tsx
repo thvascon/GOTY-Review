@@ -139,7 +139,6 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file || !loggedInProfile) return;
 
-    // Validações
     const validTypes = [
       "image/jpeg",
       "image/jpg",
@@ -169,11 +168,9 @@ const Profile = () => {
     setUploadingImage(true);
 
     try {
-      // Cria um nome único para o arquivo
       const fileExt = file.name.split(".").pop();
       const fileName = `${loggedInProfile.id}/${Date.now()}.${fileExt}`;
 
-      // Faz upload para o Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(fileName, file, {
@@ -183,7 +180,6 @@ const Profile = () => {
 
       if (uploadError) throw uploadError;
 
-      // Pega a URL pública da imagem
       const {
         data: { publicUrl },
       } = supabase.storage.from("avatars").getPublicUrl(fileName);

@@ -27,9 +27,11 @@ interface AddPersonDialogProps {
   onAddPerson: (person: { name: string }) => void;
   existingNames: string[];
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const AddPersonDialog = ({ onAddPerson, existingNames, trigger }: AddPersonDialogProps) => {
+export const AddPersonDialog = ({ onAddPerson, existingNames, open: controlledOpen, onOpenChange: controlledOnOpenChange, trigger }: AddPersonDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: ''

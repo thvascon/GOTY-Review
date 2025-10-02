@@ -3,7 +3,7 @@ import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
-  rating: number; // Aceita valores de 0 a 5 (incluindo 0.5, 1.5, 2.5, etc.)
+  rating: number;
   onRatingChange: (rating: number) => void;
   maxRating?: number;
   size?: number;
@@ -36,14 +36,11 @@ export const StarRating = ({
     
     event.stopPropagation();
     
-    // Usa o hoveredRating se existir, senão calcula baseado no click
     let newRating: number;
     
     if (hoveredRating !== null) {
-      // Usa o rating que está sendo mostrado no hover
       newRating = hoveredRating;
     } else {
-      // Fallback: calcula baseado na posição do click
       const rect = event.currentTarget.getBoundingClientRect();
       const clickX = event.clientX - rect.left;
       const starWidth = rect.width;

@@ -82,7 +82,7 @@ export function GameList({
               onRemoveGame={onRemoveGame}
               onClick={() => onCardClick(game)}
               loggedInPlayerId={loggedInPlayerId}
-              index={index} // ← ADICIONE ESTA LINHA
+              index={index}
             />
           </div>
         ))}

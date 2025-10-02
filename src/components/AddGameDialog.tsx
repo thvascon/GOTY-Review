@@ -12,7 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -40,13 +46,29 @@ interface Section {
 }
 
 interface AddGameDialogProps {
-  onAddGame: (game: { title: string; coverImage?: string; sectionId: string; genres: string }) => void;
+  onAddGame: (game: {
+    title: string;
+    coverImage?: string;
+    sectionId: string;
+    genres: string;
+  }) => void;
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({ title: "", coverImage: "", sectionId: "" });
+export const AddGameDialog = ({
+  onAddGame,
+  trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+}: AddGameDialogProps) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    coverImage: "",
+    sectionId: "",
+  });
   const [selectedGameGenres, setSelectedGameGenres] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,10 +79,15 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
   const selectionMade = useRef(false);
   const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
 
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = controlledOnOpenChange || setInternalOpen;
+
   useEffect(() => {
     if (!open) return;
     const fetchSections = async () => {
-      const { data, error } = await supabase.from("sections").select("id, title");
+      const { data, error } = await supabase
+        .from("sections")
+        .select("id, title");
       if (error) {
         console.error("Erro ao buscar seções:", error);
         return;
@@ -111,31 +138,26 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
       const response = await fetch(detailsUrl);
       const detailsData = await response.json();
 
-      const generosFormatados = (detailsData.genres || []).map((g: { name: string }) => g.name);
-      setSelectedGameGenres(generosFormatados);
+      const generosFormatados = (detailsData.genres || []).map(
+        (g: { name: string }) => g.name
+      );
+      setSelectedGameGenres(generosFormatados);
       setFormData({
-        ...formData,
-        title: detailsData.name,
-        coverImage: detailsData.background_image,
-      });
-      setSearchResults([]);
+        ...formData,
+        title: detailsData.name,
+        coverImage: detailsData.background_image,
+      });
+      setSearchResults([]);
     } catch (error) {
-      console.error("Erro ao buscar detalhes do jogo:", error);
-      setFormData({
-        ...formData,
-        title: game.name,
-        coverImage: game.background_image,
-      });
-      setSelectedGameGenres([]);
-      setSearchResults([]);
-    }
-
-    setFormData({
-      ...formData,
-      title: game.name,
-      coverImage: game.background_image,
-    });
-    setSearchResults([]);
+      console.error("Erro ao buscar detalhes do jogo:", error);
+      setFormData({
+        ...formData,
+        title: game.name,
+        coverImage: game.background_image,
+      });
+      setSelectedGameGenres([]);
+      setSearchResults([]);
+    }
   };
 
   const validateForm = () => {
@@ -162,19 +184,19 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
     if (!validateForm()) return;
     setIsSubmitting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       onAddGame({
-        title: formData.title.trim(),
-        coverImage: formData.coverImage.trim() || undefined,
-        sectionId: formData.sectionId,
-        genres: selectedGameGenres as any,
-      });
+        title: formData.title.trim(),
+        coverImage: formData.coverImage.trim() || undefined,
+        sectionId: formData.sectionId,
+        genres: selectedGameGenres as any,
+      });
       toast({
         title: "Jogo adicionado!",
         description: `"${formData.title}" foi adicionado à lista de jogos.`,
-        duration: 3000
+        duration: 3000,
       });
-      setFormData({ title: '', coverImage: '', sectionId: '' });
+      setFormData({ title: "", coverImage: "", sectionId: "" });
       setSelectedGameGenres([]);
       setErrors({});
       setOpen(false);
@@ -183,7 +205,7 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
         title: "Erro ao adicionar jogo",
         description: "Tente novamente em alguns instantes.",
         variant: "destructive",
-        duration: 3000
+        duration: 3000,
       });
     } finally {
       setIsSubmitting(false);
@@ -192,14 +214,16 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div className="flex items-center gap-x-2">
+      {!trigger && controlledOpen === undefined && (
         <DialogTrigger asChild>
-          <Button className="btn-glow flex items-center gap-2 w-full">
+          <Button className="btn-glow flex items-center gap-2">
             <Plus className="w-4 h-4" />
             Adicionar Novo Jogo
           </Button>
         </DialogTrigger>
-      </div>
+      )}
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+
       <DialogContent className="sm:max-w-md mx-auto">
         <DialogHeader>
           <DialogTitle className="text-center">Adicionar Novo Jogo</DialogTitle>
@@ -208,7 +232,6 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          
           <div className="space-y-2 relative">
             <Label htmlFor="title">Título do Jogo *</Label>
             <Input
@@ -234,7 +257,9 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
                 </ul>
               </div>
             )}
-            {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+            {errors.title && (
+              <p className="text-sm text-destructive">{errors.title}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -246,7 +271,9 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
               value={formData.coverImage}
               onChange={(e) => handleInputChange("coverImage", e.target.value)}
             />
-            {errors.coverImage && <p className="text-sm text-destructive">{errors.coverImage}</p>}
+            {errors.coverImage && (
+              <p className="text-sm text-destructive">{errors.coverImage}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -266,11 +293,17 @@ export const AddGameDialog = ({ onAddGame, trigger }: AddGameDialogProps) => {
                 ))}
               </SelectContent>
             </Select>
-            {errors.sectionId && <p className="text-sm text-destructive">{errors.sectionId}</p>}
+            {errors.sectionId && (
+              <p className="text-sm text-destructive">{errors.sectionId}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting}>

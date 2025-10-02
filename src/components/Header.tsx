@@ -1,15 +1,16 @@
+import { useState } from "react";
 import { AddGameDialog } from "./AddGameDialog";
-import { AddPersonDialog } from "./AddPersonDialog";
+import { MobileMenu } from "./MobileMenu";
 import { cn } from "@/lib/utils";
-import { LogOut, Gamepad2, User, Activity } from "lucide-react";
+import { LogOut, Gamepad2, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
+import { Plus } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
-
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -30,21 +31,80 @@ export const Header = ({
   onSearchTerm,
 }: HeaderProps) => {
   const { profile } = useAuth();
-  
-  return (
-    <header
-      className={cn(
-        "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8",
-        className
-      )}
-    >
-      <div className="flex items-center w-full">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <Gamepad2 className="w-6 h-6 text-purple-500" />
-          GOTY <span className="font-normal">Review</span>
-        </h1>
+  const [isAddGameOpen, setIsAddGameOpen] = useState(false);
+  const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
 
-        <div className="ml-auto flex items-center gap-2 sm:hidden">
+  return (
+    <>
+      <header
+        className={cn(
+          "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8",
+          className
+        )}
+      >
+        <div className="flex items-center w-full sm:w-auto justify-between">
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <Gamepad2 className="w-6 h-6 text-purple-500" />
+            GOTY <span className="font-normal">Review</span>
+          </h1>
+
+          {/* Controles Mobile */}
+          <div className="flex items-center gap-2 md:hidden">
+            <ModeToggle />
+            <MobileMenu
+              onAddGameClick={() => setIsAddGameOpen(true)}
+              onAddPersonClick={() => setIsAddPersonOpen(true)}
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => supabase.auth.signOut()}
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="w-full sm:w-96">
+          <Input
+            type="text"
+            placeholder="Buscar jogo..."
+            value={searchTerm}
+            onChange={(e) => onSearchTerm?.(e.target.value)}
+          />
+        </div>
+
+        {/* Botões Desktop - Simples */}
+        <div className="hidden md:flex flex-row gap-3">
+          <Button
+            onClick={() => setIsAddGameOpen(true)}
+            className="btn-glow flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Adicionar Novo Jogo
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/feed">
+              <Activity className="w-4 h-4 mr-2" />
+              Feed
+            </Link>
+          </Button>
+
+          <Button asChild variant="outline" className="gap-2">
+            <Link to="/profile">
+              <Avatar className="w-6 h-6">
+                <AvatarImage src={profile?.avatar_url || undefined} />
+                <AvatarFallback className="text-xs">
+                  {profile?.name?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              Meu Perfil
+            </Link>
+          </Button>
+        </div>
+
+        {/* Controles Desktop direita */}
+        <div className="hidden md:flex items-center gap-2">
           <ModeToggle />
           <Button
             variant="ghost"
@@ -54,55 +114,17 @@ export const Header = ({
             <LogOut className="w-5 h-5" />
           </Button>
         </div>
-      </div>
-      
-      <div className="w-full sm:w-96">
-        <Input
-          type="text"
-          placeholder="Buscar jogo..."
-          value={searchTerm}
-          onChange={(e) => onSearchTerm?.(e.target.value)}
-        />
-      </div>
+      </header>
 
-      <div className="flex flex-col sm:flex-row gap-3 sm:w-auto w-full">
-        <AddGameDialog onAddGame={onAddGame} />
-        <AddPersonDialog
-          onAddPerson={onAddPerson}
-          existingNames={existingPersonNames}
-        />
-        
-        <Button asChild variant="outline">
-          <Link to="/feed">
-            <Activity className="w-4 h-4 mr-2" />
-            <span className="hidden sm:inline">Feed</span>
-          </Link>
-        </Button>
-       
-        <Button asChild variant="outline" className="gap-2">
-          <Link to="/profile">
-            <Avatar className="w-6 h-6">
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="text-xs">
-                {profile?.name?.charAt(0).toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <span className="hidden sm:inline">Meu Perfil</span>
-            <User className="w-4 h-4 sm:hidden" />
-          </Link>
-        </Button>
-      </div>
-     
-      <div className="hidden sm:flex items-center gap-2">
-        <ModeToggle />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => supabase.auth.signOut()}
-        >
-          <LogOut className="w-5 h-5" />
-        </Button>
-      </div>
-    </header>
+      {/* Dialog para mobile */}
+      <AddGameDialog
+        onAddGame={(game) => {
+          onAddGame(game);
+          setIsAddGameOpen(false);
+        }}
+        open={isAddGameOpen}
+        onOpenChange={setIsAddGameOpen}
+      />
+    </>
   );
 };

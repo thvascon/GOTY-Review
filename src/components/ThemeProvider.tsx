@@ -38,7 +38,6 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
-    // Remove todas as classes de tema
     root.classList.remove("light", "dark");
 
     let effectiveTheme: "light" | "dark" = "dark";
@@ -52,10 +51,8 @@ export function ThemeProvider({
       effectiveTheme = theme;
     }
 
-    // Adiciona a classe do tema
     root.classList.add(effectiveTheme);
     
-    // Debug: mostra no console
     console.log("Tema aplicado:", effectiveTheme, "Classes:", root.classList.toString());
   }, [theme])
 
