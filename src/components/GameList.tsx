@@ -70,7 +70,7 @@ export function GameList({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
-        {sortedGames.map((game) => (
+        {sortedGames.map((game, index) => (
           <div key={game.id} className="relative z-0 hover:z-10 h-full">
             <GameCard
               id={game.id}
@@ -82,6 +82,7 @@ export function GameList({
               onRemoveGame={onRemoveGame}
               onClick={() => onCardClick(game)}
               loggedInPlayerId={loggedInPlayerId}
+              index={index} // ← ADICIONE ESTA LINHA
             />
           </div>
         ))}
