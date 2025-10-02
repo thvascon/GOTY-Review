@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import { ThemeProvider } from "./components/ThemeProvider";
+import Feed from "./pages/Feed";
+
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/feed" element={<Feed />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

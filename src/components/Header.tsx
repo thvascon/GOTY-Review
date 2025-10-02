@@ -1,7 +1,7 @@
 import { AddGameDialog } from "./AddGameDialog";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { cn } from "@/lib/utils";
-import { LogOut, Gamepad2, User } from "lucide-react";
+import { LogOut, Gamepad2, User, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { ModeToggle } from "@/components/ModeToggle";
+
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -70,6 +71,13 @@ export const Header = ({
           onAddPerson={onAddPerson}
           existingNames={existingPersonNames}
         />
+        
+        <Button asChild variant="outline">
+          <Link to="/feed">
+            <Activity className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Feed</span>
+          </Link>
+        </Button>
        
         <Button asChild variant="outline" className="gap-2">
           <Link to="/profile">
