@@ -22,6 +22,7 @@ import { GameList } from "@/components/GameList";
 interface Player {
   id: string;
   name: string;
+  avatar_url?: string | null;
 }
 
 interface Game {
@@ -75,7 +76,7 @@ const Index = () => {
 
         const [peopleRes, sectionsRes, gamesRes, reviewsRes] =
           await Promise.all([
-            supabase.from("people").select("*"),
+            supabase.from("people").select("id, name, avatar_url"),
             supabase.from("sections").select("*"),
             supabase.from("games").select("*"),
             supabase.from("reviews").select("*"),
@@ -377,6 +378,7 @@ const Index = () => {
       return {
         playerId: player.id,
         playerName: player.name,
+        playerAvatar: player.avatar_url || null,
         rating: rating?.rating || 0,
         comment: rating?.comment || "",
       };

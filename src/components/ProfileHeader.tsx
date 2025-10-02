@@ -15,6 +15,7 @@ interface ProfileHeaderProps {
   };
   bannerImage: string | null | undefined;
   onEditClick: () => void;
+  showEditButton?: boolean; // Nova prop
 }
 
 export const ProfileHeader = ({
@@ -22,6 +23,7 @@ export const ProfileHeader = ({
   stats,
   bannerImage,
   onEditClick,
+  showEditButton = true, // Por padrão mostra o botão
 }: ProfileHeaderProps) => {
   return (
     <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 overflow-hidden">
@@ -65,14 +67,16 @@ export const ProfileHeader = ({
                 <span className="flex items-center gap-1.5 text-xs md:text-sm">
                   <Calendar size={14} className="md:w-4 md:h-4" /> Desde {stats.memberSince}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={onEditClick}
-                  className="text-gray-300 hover:text-white hover:bg-white/10 h-8 w-8"
-                >
-                  <Edit size={16} className="md:w-[18px] md:h-[18px]" />
-                </Button>
+                {showEditButton && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onEditClick}
+                    className="text-gray-300 hover:text-white hover:bg-white/10 h-8 w-8"
+                  >
+                    <Edit size={16} className="md:w-[18px] md:h-[18px]" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>

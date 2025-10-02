@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/components/AuthProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -40,43 +40,85 @@ interface UserReview {
   } | null;
 }
 
+interface ProfileData {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  created_at: string;
+}
+
 const Profile = () => {
-  const { session, profile, loading: authLoading, refetchProfile } = useAuth();
+  const { session, profile: loggedInProfile, loading: authLoading, refetchProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  
+  // Pega o ID da URL ou usa o perfil logado
+  const profileId = searchParams.get("id") || loggedInProfile?.id;
+  const isOwnProfile = loggedInProfile?.id === profileId;
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [showAllReviews, setShowAllReviews] = useState(false);
 
   const [sortBy, setSortBy] = useState("recent");
 
+  // Buscar dados do perfil (público ou próprio)
   useEffect(() => {
-    if (!authLoading && !session) {
-      navigate("/");
-    }
-  }, [session, authLoading, navigate]);
+    const fetchProfileData = async () => {
+      if (!profileId) {
+        setProfileLoading(false);
+        return;
+      }
 
-  useEffect(() => {
-    if (profile) {
-      setName(profile.name || "");
-      setAvatarUrl(profile.avatar_url || "");
-    }
-  }, [profile]);
+      setProfileLoading(true);
+      const { data, error } = await supabase
+        .from("people")
+        .select("id, name, avatar_url, created_at")
+        .eq("id", profileId)
+        .single();
 
+      if (error) {
+        console.error("Erro ao buscar perfil:", error);
+        toast({
+          title: "Erro",
+          description: "Perfil não encontrado.",
+          variant: "destructive",
+        });
+        navigate("/");
+      } else {
+        setProfileData(data);
+      }
+      setProfileLoading(false);
+    };
+
+    fetchProfileData();
+  }, [profileId, navigate, toast]);
+
+  // Atualizar formulário de edição quando for o próprio perfil
   useEffect(() => {
-    if (profile) {
+    if (isOwnProfile && loggedInProfile) {
+      setName(loggedInProfile.name || "");
+      setAvatarUrl(loggedInProfile.avatar_url || "");
+    }
+  }, [isOwnProfile, loggedInProfile]);
+
+  // Buscar avaliações do perfil
+  useEffect(() => {
+    if (profileId) {
       const fetchReviews = async () => {
         setReviewsLoading(true);
         const { data, error } = await supabase
           .from("reviews")
           .select("created_at, rating, comment, games(id, name, cover_image)")
-          .eq("person_id", profile.id)
+          .eq("person_id", profileId)
           .gt("rating", 0)
           .order("created_at", { ascending: false });
 
@@ -89,17 +131,17 @@ const Profile = () => {
       };
       fetchReviews();
     }
-  }, [profile]);
+  }, [profileId]);
 
   const stats = useMemo(() => {
-    if (!reviews || !profile) return { total: 0, average: 0, memberSince: "" };
+    if (!reviews || !profileData) return { total: 0, average: 0, memberSince: "" };
 
     const total = reviews.length;
     const average =
       total > 0
         ? (reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1)
         : 0;
-    const memberSince = new Date(profile.created_at).toLocaleDateString(
+    const memberSince = new Date(profileData.created_at).toLocaleDateString(
       "pt-BR",
       {
         month: "long",
@@ -108,11 +150,11 @@ const Profile = () => {
     );
 
     return { total, average, memberSince };
-  }, [reviews, profile]);
+  }, [reviews, profileData]);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
+    if (!loggedInProfile || !isOwnProfile) return;
 
     setIsSubmitting(true);
     const { error } = await supabase
@@ -121,7 +163,7 @@ const Profile = () => {
         name: name,
         avatar_url: avatarUrl,
       })
-      .eq("id", profile.id);
+      .eq("id", loggedInProfile.id);
 
     if (error) {
       toast({
@@ -133,6 +175,12 @@ const Profile = () => {
       toast({ title: "Sucesso!", description: "Seu perfil foi atualizado." });
       await refetchProfile();
       setIsEditModalOpen(false);
+      // Atualizar os dados do perfil exibido
+      setProfileData({
+        ...profileData!,
+        name: name,
+        avatar_url: avatarUrl,
+      });
     }
     setIsSubmitting(false);
   };
@@ -155,65 +203,81 @@ const Profile = () => {
   const reviewsToShow = showAllReviews
     ? sortedReviews
     : sortedReviews.slice(0, 3);
-  const bannerImage = sortedReviews[0]?.games.cover_image;
+  const bannerImage = sortedReviews[0]?.games?.cover_image;
 
-  if (authLoading || !profile) {
+  if (authLoading || profileLoading) {
     return <div className="p-8 text-center">Carregando perfil...</div>;
+  }
+
+  if (!profileData) {
+    return (
+      <div className="p-8 text-center">
+        <h2 className="text-xl font-bold mb-4">Perfil não encontrado</h2>
+        <Button asChild>
+          <Link to="/">Voltar para a Página Inicial</Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-        <Button asChild variant="ghost" className="hidden md:inline-flex absolute top-4 left-4 z-20">
+      <Button asChild variant="ghost" className="hidden md:inline-flex absolute top-4 left-4 z-20">
         <Link to="/">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para a Página Inicial
         </Link>
       </Button>
+      
       <ProfileHeader
         profile={{
-          name: profile.name,
-          avatar_url: profile.avatar_url ?? null,
+          name: profileData.name,
+          avatar_url: profileData.avatar_url,
         }}
         stats={stats}
         bannerImage={bannerImage}
         onEditClick={() => setIsEditModalOpen(true)}
+        showEditButton={isOwnProfile}
       />
       
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto">
-          <DialogHeader>
-            <DialogTitle>Editar Perfil</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleUpdateProfile} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="avatar-url">URL do Avatar</Label>
-              <Input
-                id="avatar-url"
-                type="url"
-                value={avatarUrl || ""}
-                onChange={(e) => setAvatarUrl(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nome de Exibição</Label>
-              <Input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                Salvar
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Modal de edição só aparece se for o próprio perfil */}
+      {isOwnProfile && (
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="w-[95vw] max-w-md mx-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Perfil</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateProfile} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="avatar-url">URL do Avatar</Label>
+                <Input
+                  id="avatar-url"
+                  type="url"
+                  value={avatarUrl || ""}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome de Exibição</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  )}
+                  Salvar
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="container mx-auto max-w-6xl px-4 md:px-6 lg:px-8 py-6 md:py-8">
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
@@ -236,6 +300,12 @@ const Profile = () => {
 
         {reviewsLoading ? (
           <p className="text-muted-foreground">Carregando avaliações...</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">
+            {isOwnProfile 
+              ? "Você ainda não avaliou nenhum jogo." 
+              : "Este usuário ainda não avaliou nenhum jogo."}
+          </p>
         ) : (
           <div className="space-y-3 md:space-y-4">
             {reviewsToShow.map(

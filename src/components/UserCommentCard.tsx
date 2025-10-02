@@ -1,45 +1,45 @@
-import { Star } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { StarRating } from './StarRating';
+import { PlayerLink } from './PlayerLink';
 
 interface UserCommentCardProps {
+  playerId: string;
   userName: string;
+  avatarUrl?: string | null;
   rating: number;
   comment: string | null;
 }
 
-const getRatingColor = (currentRating: number) => {
-  if (currentRating >= 8) return 'text-green-400';
-  if (currentRating >= 6) return 'text-yellow-400';
-  return 'text-red-400';
-};
-
 export const UserCommentCard = ({ 
+  playerId,
   userName, 
+  avatarUrl,
   rating, 
   comment 
 }: UserCommentCardProps) => {
-
-  const colorClass = getRatingColor(rating);
-
-  const hasComment = !!comment?.trim();
-
   return (
-    <div className="border-b border-border pb-4">
-      <div className="flex justify-between items-center mb-2">
-        <p className="font-semibold text-foreground">{userName}</p>
-        <div className="flex items-center gap-2">
-          <span className={cn("font-bold tabular-nums", colorClass)}>
-            {rating}/10
-          </span>
-          <Star size={16} className={cn("fill-current", colorClass)} />
+    <div className="p-4 bg-muted/50 rounded-lg border">
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <PlayerLink 
+          playerId={playerId}
+          playerName={userName}
+          avatarUrl={avatarUrl}
+          showAvatar={true}
+          className="font-semibold"
+        />
+        <div className="flex-shrink-0">
+          <StarRating 
+            rating={rating} 
+            onRatingChange={() => {}} 
+            disabled 
+            size={14}
+          />
         </div>
       </div>
-
-      <p className="text-muted-foreground text-sm italic">
-        {hasComment 
-          ? comment 
-          : "(O usuário deixou apenas a nota.)"}
-      </p>
+      {comment && (
+        <p className="text-sm text-muted-foreground mt-2 italic">
+          "{comment}"
+        </p>
+      )}
     </div>
   );
 };

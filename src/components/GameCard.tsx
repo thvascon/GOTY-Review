@@ -1,21 +1,22 @@
 import { StarRating } from './StarRating';
+import { PlayerLink } from './PlayerLink';
 import { cn } from '@/lib/utils';
-import { X } from 'lucide-react';
+import { MoreVertical, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import React from 'react';
-
-interface PlayerRating {
-  playerId: string;
-  playerName: string;
-  rating: { playerId: string; rating: number; playerName: string }[];
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import React, { useState } from 'react';
 
 interface GameCardProps {
   id: string;
   title: string;
   coverImage: string;
   genres?: string[];
-  ratings: { playerId: string; rating: number; playerName: string }[];
+  ratings: { playerId: string; rating: number; playerName: string; playerAvatar?: string | null }[];
   onRatingChange: (gameId: string, playerId: string, rating: number) => void;
   onRemoveGame?: (gameId: string) => void;
   onClick?: () => void;
@@ -35,30 +36,55 @@ export const GameCard = ({
   className,
   loggedInPlayerId,
 }: GameCardProps) => {
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  const handleRemoveClick = (e: React.MouseEvent) => {
+  const handleRemove = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onRemoveGame) {
-      onRemoveGame(id);
+    if (confirm(`Tem certeza que deseja remover "${title}"?`)) {
+      if (onRemoveGame) {
+        setIsRemoving(true);
+        await onRemoveGame(id);
+        setIsRemoving(false);
+      }
     }
   };
 
+  // Encontra a avaliação do usuário logado
+  const loggedInRating = ratings.find((r) => r.playerId === loggedInPlayerId);
+  
+  // Filtra as avaliações para remover a do usuário logado
+  const otherRatings = ratings.filter((r) => r.playerId !== loggedInPlayerId);
+
   return (
     <div
-      className={cn("bg-card rounded-lg shadow-lg overflow-hidden flex flex-col cursor-pointer transition-transform duration-200 hover:scale-105 relative z-0 hover:z-10 transition-transform duration-300 transform hover:scale-105 relative", className)}
+      className={cn("bg-card rounded-lg shadow-lg overflow-hidden flex flex-col cursor-pointer transition-transform duration-200 hover:scale-105 relative z-0 hover:z-10 group", className)}
       onClick={onClick}
     >
+      {/* Botão de 3 pontinhos - só aparece no hover */}
+      {onRemoveGame && (
+        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="secondary" size="icon" className="h-8 w-8">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={handleRemove}
+                disabled={isRemoving}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {isRemoving ? "Removendo..." : "Remover jogo"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {/* Imagem com título sobreposto */}
       <div className="relative w-full h-48 bg-muted">
-        {onRemoveGame && (
-          <Button
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2 w-7 h-7 z-10 opacity-70 hover:opacity-100"
-            onClick={handleRemoveClick}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
         <img
           src={coverImage}
           alt={`Capa de ${title}`}
@@ -66,14 +92,18 @@ export const GameCard = ({
           onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
           loading="lazy"
         />
+        {/* Gradiente e título */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute bottom-3 left-3 right-3">
+          <h3 className="text-white font-bold text-lg line-clamp-2 drop-shadow-lg">
+            {title}
+          </h3>
+        </div>
       </div>
 
       <div className="p-4 flex flex-col flex-grow">
         <div className="mb-4 h-56">
-          <h3 className="mb-2 text-lg font-bold line-clamp-2">
-            {title}
-          </h3>
-          
+          {/* Genres */}
           {genres && genres.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
               {genres.map((genre, index) => (
@@ -87,21 +117,41 @@ export const GameCard = ({
             </div>
           )}
 
+          {/* Seção "Sua avaliação" - só aparece se o usuário estiver logado */}
+          {loggedInPlayerId && loggedInRating && (
+            <div className="mb-4 pb-3 border-b border-border">
+              <span className="text-xs text-muted-foreground block mb-2">Sua avaliação:</span>
+              <StarRating
+                rating={loggedInRating.rating}
+                onRatingChange={(newRating) => onRatingChange(id, loggedInPlayerId, newRating)}
+                size={16}
+              />
+            </div>
+          )}
+
+          {/* Avaliações dos outros usuários (sem o usuário logado) */}
           <div className="space-y-2">
-            {ratings.map((rating) => (
+            {otherRatings.map((rating) => (
               <div key={rating.playerId} className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground mr-1.5">{rating.playerName}</span>
+                <PlayerLink
+                  playerId={rating.playerId}
+                  playerName={rating.playerName}
+                  avatarUrl={rating.playerAvatar}
+                  showAvatar={false}
+                  className="text-sm text-muted-foreground mr-1.5"
+                />
                 <StarRating
                   rating={rating.rating}
-                  onRatingChange={(newRating) => onRatingChange(id, rating.playerId, newRating)}
+                  onRatingChange={() => {}}
                   size={14}
-                  disabled={rating.playerId !== loggedInPlayerId}
+                  disabled
                 />
               </div>
             ))}
           </div>
         </div>
 
+        {/* Média da Galera */}
         <div className="pt-4 mt-4 border-t border-border">
           <div className="flex justify-between items-center text-xs text-muted-foreground uppercase">
             <span>Média da Galera</span>

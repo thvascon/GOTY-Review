@@ -15,6 +15,7 @@ interface ReviewData {
 interface Player {
   id: string;
   name: string;
+  avatar_url?: string | null;
 }
 
 interface ModalReviewProps {
@@ -31,13 +32,14 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
 
-  const reviewsWithUserNames = useMemo(() => {
+  const reviewsWithUserInfo = useMemo(() => {
     return reviews
       .map(review => {
         const player = players.find(p => p.id === review.playerId);
         return {
           ...review,
           userName: player ? player.name : 'Usuário desconhecido',
+          avatarUrl: player?.avatar_url || null,
         };
       })
       .filter(review => review.rating > 0);
@@ -116,18 +118,20 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
       {/* SEÇÃO 2: COMENTÁRIOS DA GALERA */}
       <div>
         <h2 className="text-lg font-semibold mb-3">
-          Comentários da Galera ({reviewsWithUserNames.length})
+          Comentários da Galera ({reviewsWithUserInfo.length})
         </h2>
         <div className="max-h-[300px] overflow-y-auto pr-2 space-y-4">
-          {reviewsWithUserNames.map((review) => (
+          {reviewsWithUserInfo.map((review) => (
             <UserCommentCard
               key={review.playerId}
+              playerId={review.playerId}
               userName={review.userName}
+              avatarUrl={review.avatarUrl}
               rating={review.rating}
               comment={review.comment}
             />
           ))}
-          {reviewsWithUserNames.length === 0 && (
+          {reviewsWithUserInfo.length === 0 && (
             <p className="text-muted-foreground italic">
               Seja o primeiro a comentar!
             </p>

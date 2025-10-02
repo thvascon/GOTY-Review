@@ -1,12 +1,13 @@
-import { Gamepad2 } from "lucide-react";
 import { AddGameDialog } from "./AddGameDialog";
 import { AddPersonDialog } from "./AddPersonDialog";
 import { cn } from "@/lib/utils";
-import { LogOut } from "lucide-react";
+import { LogOut, Gamepad2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/components/AuthProvider";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -26,6 +27,8 @@ export const Header = ({
   searchTerm,
   onSearchTerm,
 }: HeaderProps) => {
+  const { profile } = useAuth();
+
   return (
     <header
       className={cn(
@@ -53,7 +56,7 @@ export const Header = ({
           type="text"
           placeholder="Buscar jogo..."
           value={searchTerm}
-          onChange={(e) => onSearchTerm(e.target.value)}
+          onChange={(e) => onSearchTerm?.(e.target.value)}
         />
       </div>
 
@@ -63,10 +66,22 @@ export const Header = ({
           onAddPerson={onAddPerson}
           existingNames={existingPersonNames}
         />
-        <Button asChild variant="outline">
-          <Link to="/profile">Meu Perfil</Link>
-        </Button> 
+        
+        {/* Botão do Perfil com Avatar */}
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/profile">
+            <Avatar className="w-6 h-6">
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs">
+                {profile?.name?.charAt(0).toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="hidden sm:inline">Meu Perfil</span>
+            <User className="w-4 h-4 sm:hidden" />
+          </Link>
+        </Button>
       </div>
+      
       <div className="">
         <Button
           variant="ghost"
