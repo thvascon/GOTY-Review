@@ -27,7 +27,12 @@ export const ProfileHeader = ({
 }: ProfileHeaderProps) => {
   return (
     <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 overflow-hidden">
-        <Button asChild variant="ghost" size="icon" className="md:hidden absolute top-4 left-4 z-20 text-white">
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="md:hidden absolute top-4 left-4 z-20 text-white"
+      >
         <Link to="/">
           <ArrowLeft />
         </Link>
@@ -57,15 +62,19 @@ export const ProfileHeader = ({
               <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.5)]">
                 {profile.name}
               </h1>
-              <div className="flex flex-wrap justify-center md:justify-start gap-x-3 md:gap-x-4 gap-y-1 mt-2 md:mt-3 text-gray-300">
+              <div className="flex flex-wrap justify-center md:justify-start gap-x-3 md:gap-x-4 gap-y-1 mt-2 md:mt-3 text-white [text-shadow:_0_2px_8px_rgb(0_0_0_/_80%)]">
+                {" "}
                 <span className="flex items-center gap-1.5 text-xs md:text-sm">
-                  <Gamepad2 size={14} className="md:w-4 md:h-4" /> {stats.total} jogos avaliados
+                  <Gamepad2 size={14} className="md:w-4 md:h-4" /> {stats.total}{" "}
+                  jogos avaliados
                 </span>
                 <span className="flex items-center gap-1.5 text-xs md:text-sm">
-                  <Star size={14} className="md:w-4 md:h-4" /> {stats.average} média
+                  <Star size={14} className="md:w-4 md:h-4" /> {stats.average}{" "}
+                  média
                 </span>
                 <span className="flex items-center gap-1.5 text-xs md:text-sm">
-                  <Calendar size={14} className="md:w-4 md:h-4" /> Desde {stats.memberSince}
+                  <Calendar size={14} className="md:w-4 md:h-4" /> Desde{" "}
+                  {stats.memberSince}
                 </span>
                 {showEditButton && (
                   <Button

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
+import { ModeToggle } from "@/components/ModeToggle";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -28,7 +29,7 @@ export const Header = ({
   onSearchTerm,
 }: HeaderProps) => {
   const { profile } = useAuth();
-
+  
   return (
     <header
       className={cn(
@@ -42,15 +43,18 @@ export const Header = ({
           GOTY <span className="font-normal">Review</span>
         </h1>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="ml-auto sm:hidden"
-          onClick={() => supabase.auth.signOut()}
-        >
-          <LogOut className="w-5 h-5" />
-        </Button>
+        <div className="ml-auto flex items-center gap-2 sm:hidden">
+          <ModeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => supabase.auth.signOut()}
+          >
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
       </div>
+      
       <div className="w-full sm:w-96">
         <Input
           type="text"
@@ -66,8 +70,7 @@ export const Header = ({
           onAddPerson={onAddPerson}
           existingNames={existingPersonNames}
         />
-        
-        {/* Botão do Perfil com Avatar */}
+       
         <Button asChild variant="outline" className="gap-2">
           <Link to="/profile">
             <Avatar className="w-6 h-6">
@@ -81,12 +84,12 @@ export const Header = ({
           </Link>
         </Button>
       </div>
-      
-      <div className="">
+     
+      <div className="hidden sm:flex items-center gap-2">
+        <ModeToggle />
         <Button
           variant="ghost"
           size="icon"
-          className="ml-auto hidden sm:inline-flex"
           onClick={() => supabase.auth.signOut()}
         >
           <LogOut className="w-5 h-5" />
