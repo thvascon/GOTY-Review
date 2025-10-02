@@ -3,7 +3,7 @@ import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface StarRatingProps {
-  rating: number;
+  rating: number; // Aceita valores de 0 a 5 (incluindo 0.5, 1.5, 2.5, etc.)
   onRatingChange: (rating: number) => void;
   maxRating?: number;
   size?: number;
@@ -15,7 +15,7 @@ export const StarRating = ({
   rating,
   onRatingChange,
   disabled = false,
-  maxRating = 10,
+  maxRating = 5,
   size = 16,
   className,
 }: StarRatingProps) => {
@@ -23,20 +23,60 @@ export const StarRating = ({
 
   const getRatingColor = (currentRating: number) => {
     if (currentRating === 0) return "star-unplayed";
-    if (currentRating >= 8) return "star-excellent";
-    if (currentRating >= 6) return "star-good";
+    if (currentRating >= 4) return "star-excellent";
+    if (currentRating >= 3) return "star-good";
     return "star-poor";
   };
 
   const displayRating = hoveredRating !== null ? hoveredRating : rating;
   const colorClass = getRatingColor(displayRating);
 
+  const handleStarClick = (event: React.MouseEvent<HTMLButtonElement>, starIndex: number) => {
+    if (disabled) return;
+    
+    event.stopPropagation();
+    
+    // Usa o hoveredRating se existir, senão calcula baseado no click
+    let newRating: number;
+    
+    if (hoveredRating !== null) {
+      // Usa o rating que está sendo mostrado no hover
+      newRating = hoveredRating;
+    } else {
+      // Fallback: calcula baseado na posição do click
+      const rect = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const starWidth = rect.width;
+      const isLeftHalf = clickX < starWidth / 2;
+      newRating = isLeftHalf ? starIndex + 0.5 : starIndex + 1;
+    }
+    
+    if (newRating === rating) {
+      onRatingChange(0);
+    } else {
+      onRatingChange(newRating);
+    }
+  };
+
+  const handleStarHover = (event: React.MouseEvent<HTMLButtonElement>, starIndex: number) => {
+    if (disabled) return;
+    
+    const rect = event.currentTarget.getBoundingClientRect();
+    const hoverX = event.clientX - rect.left;
+    const starWidth = rect.width;
+    const isLeftHalf = hoverX < starWidth / 2;
+    
+    const hoverRating = isLeftHalf ? starIndex + 0.5 : starIndex + 1;
+    setHoveredRating(hoverRating);
+  };
+
   return (
     <div className={cn("flex items-center justify-between w-full", className)}>
       <div className="flex items-center gap-0.5 flex-shrink-0">
         {Array.from({ length: maxRating }, (_, index) => {
-          const starValue = index + 1;
-          const isFilled = starValue <= displayRating;
+          const starPosition = index + 1;
+          const isFull = starPosition <= displayRating;
+          const isHalf = !isFull && (starPosition - 0.5) <= displayRating && displayRating < starPosition;
 
           return (
             <button
@@ -44,37 +84,43 @@ export const StarRating = ({
               type="button"
               disabled={disabled}
               className={cn(
-                "transition-all duration-200",
+                "transition-all duration-200 relative",
                 !disabled && "hover:scale-110",
                 disabled && "cursor-not-allowed",
                 colorClass
               )}
-              onMouseEnter={
-                !disabled ? () => setHoveredRating(starValue) : undefined
+              onMouseMove={
+                !disabled ? (e) => handleStarHover(e, index) : undefined
               }
               onMouseLeave={
                 !disabled ? () => setHoveredRating(null) : undefined
               }
-              onClick={(event) => {
-                if (!disabled) {
-                  event.stopPropagation();
-                  if (starValue === rating) {
-                    onRatingChange(0);
-                  } else {
-                    onRatingChange(starValue);
-                  }
-                }
-              }}
+              onClick={(e) => handleStarClick(e, index)}
             >
-              <Star
-                size={size}
-                className={cn(
-                  "transition-all duration-200",
-                  isFilled
-                    ? "fill-current"
-                    : "fill-transparent stroke-current opacity-60"
-                )}
-              />
+              {isHalf ? (
+                <div className="relative inline-block">
+                  <Star
+                    size={size}
+                    className="fill-transparent stroke-current opacity-60"
+                  />
+                  <div className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%' }}>
+                    <Star
+                      size={size}
+                      className="fill-current"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <Star
+                  size={size}
+                  className={cn(
+                    "transition-all duration-200",
+                    isFull
+                      ? "fill-current"
+                      : "fill-transparent stroke-current opacity-60"
+                  )}
+                />
+              )}
             </button>
           );
         })}
@@ -85,7 +131,7 @@ export const StarRating = ({
           colorClass
         )}
       >
-        {displayRating > 0 ? `${displayRating}/10` : ""}
+        {displayRating > 0 ? `${displayRating.toFixed(1)}/5` : ""}
       </span>
     </div>
   );

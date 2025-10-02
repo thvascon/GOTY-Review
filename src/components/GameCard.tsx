@@ -1,27 +1,32 @@
-import { StarRating } from './StarRating';
-import { PlayerLink } from './PlayerLink';
-import { cn } from '@/lib/utils';
-import { MoreVertical, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { StarRating } from "./StarRating";
+import { PlayerLink } from "./PlayerLink";
+import { cn } from "@/lib/utils";
+import { MoreVertical, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface GameCardProps {
   id: string;
   title: string;
   coverImage: string;
   genres?: string[];
-  ratings: { playerId: string; rating: number; playerName: string; playerAvatar?: string | null }[];
+  ratings: {
+    playerId: string;
+    rating: number;
+    playerName: string;
+    playerAvatar?: string | null;
+  }[];
   onRatingChange: (gameId: string, playerId: string, rating: number) => void;
   onRemoveGame?: (gameId: string) => void;
   onClick?: () => void;
   className?: string;
-  loggedInPlayerId?: string; 
+  loggedInPlayerId?: string;
 }
 
 export const GameCard = ({
@@ -51,13 +56,16 @@ export const GameCard = ({
 
   // Encontra a avaliação do usuário logado
   const loggedInRating = ratings.find((r) => r.playerId === loggedInPlayerId);
-  
+
   // Filtra as avaliações para remover a do usuário logado
   const otherRatings = ratings.filter((r) => r.playerId !== loggedInPlayerId);
 
   return (
     <div
-      className={cn("bg-card rounded-lg shadow-lg overflow-hidden flex flex-col cursor-pointer transition-transform duration-200 hover:scale-105 relative z-0 hover:z-10 group", className)}
+      className={cn(
+        "bg-card rounded-lg shadow-lg overflow-hidden flex flex-col cursor-pointer transition-transform duration-200 hover:scale-105 relative z-0 hover:z-10 group",
+        className
+      )}
       onClick={onClick}
     >
       {/* Botão de 3 pontinhos - só aparece no hover */}
@@ -89,7 +97,9 @@ export const GameCard = ({
           src={coverImage}
           alt={`Capa de ${title}`}
           className="absolute inset-0 w-full h-full object-cover object-top"
-          onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
+          onError={(e) => {
+            e.currentTarget.src = "/placeholder.svg";
+          }}
           loading="lazy"
         />
         {/* Gradiente e título */}
@@ -107,7 +117,7 @@ export const GameCard = ({
           {genres && genres.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
               {genres.map((genre, index) => (
-                <span 
+                <span
                   key={index}
                   className="text-xs px-2 py-0.5 bg-muted/50 rounded border border-border/50 text-muted-foreground"
                 >
@@ -120,10 +130,14 @@ export const GameCard = ({
           {/* Seção "Sua avaliação" - só aparece se o usuário estiver logado */}
           {loggedInPlayerId && loggedInRating && (
             <div className="mb-4 pb-3 border-b border-border">
-              <span className="text-xs text-muted-foreground block mb-2">Sua avaliação:</span>
+              <span className="text-xs text-muted-foreground block mb-2">
+                Sua avaliação:
+              </span>
               <StarRating
                 rating={loggedInRating.rating}
-                onRatingChange={(newRating) => onRatingChange(id, loggedInPlayerId, newRating)}
+                onRatingChange={(newRating) =>
+                  onRatingChange(id, loggedInPlayerId, newRating)
+                }
                 size={16}
               />
             </div>
@@ -132,7 +146,10 @@ export const GameCard = ({
           {/* Avaliações dos outros usuários (sem o usuário logado) */}
           <div className="space-y-2">
             {otherRatings.map((rating) => (
-              <div key={rating.playerId} className="flex items-center justify-between">
+              <div
+                key={rating.playerId}
+                className="flex items-center justify-between"
+              >
                 <PlayerLink
                   playerId={rating.playerId}
                   playerName={rating.playerName}
@@ -157,10 +174,14 @@ export const GameCard = ({
             <span>Média da Galera</span>
             <span>
               {(() => {
-                const validRatings = ratings.filter(r => r.rating > 0);
-                const average = validRatings.length > 0
-                  ? (validRatings.reduce((sum, r) => sum + r.rating, 0) / validRatings.length).toFixed(1)
-                  : '—';
+                const validRatings = ratings.filter((r) => r.rating > 0);
+                const average =
+                  validRatings.length > 0
+                    ? (
+                        validRatings.reduce((sum, r) => sum + r.rating, 0) /
+                        validRatings.length
+                      ).toFixed(1)
+                    : "—";
                 return `${average} (${validRatings.length}/${ratings.length})`;
               })()}
             </span>
