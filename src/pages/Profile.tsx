@@ -393,17 +393,6 @@ const Profile = () => {
 
               {/* URL do Avatar (alternativa) */}
               <div className="space-y-2">
-                <Label htmlFor="avatar-url">Ou use uma URL de imagem</Label>
-                <Input
-                  id="avatar-url"
-                  type="url"
-                  value={avatarUrl || ""}
-                  onChange={(e) => {
-                    setAvatarUrl(e.target.value);
-                    setImagePreview(e.target.value);
-                  }}
-                  placeholder="https://exemplo.com/foto.jpg"
-                />
               </div>
 
               {/* Nome */}
