@@ -8,12 +8,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ProfileHeader } from "@/components/ProfileHeader";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, Gamepad2, Star, Calendar, Edit } from "lucide-react";
+import { Loader2, Calendar, Upload, X } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import { ArrowLeft } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -26,7 +23,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 interface UserReview {
@@ -48,12 +44,16 @@ interface ProfileData {
 }
 
 const Profile = () => {
-  const { session, profile: loggedInProfile, loading: authLoading, refetchProfile } = useAuth();
+  const {
+    session,
+    profile: loggedInProfile,
+    loading: authLoading,
+    refetchProfile,
+  } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
-  
-  // Pega o ID da URL ou usa o perfil logado
+
   const profileId = searchParams.get("id") || loggedInProfile?.id;
   const isOwnProfile = loggedInProfile?.id === profileId;
 
@@ -61,6 +61,8 @@ const Profile = () => {
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -70,7 +72,6 @@ const Profile = () => {
 
   const [sortBy, setSortBy] = useState("recent");
 
-  // Buscar dados do perfil (público ou próprio)
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!profileId) {
@@ -102,15 +103,14 @@ const Profile = () => {
     fetchProfileData();
   }, [profileId, navigate, toast]);
 
-  // Atualizar formulário de edição quando for o próprio perfil
   useEffect(() => {
     if (isOwnProfile && loggedInProfile) {
       setName(loggedInProfile.name || "");
       setAvatarUrl(loggedInProfile.avatar_url || "");
+      setImagePreview(loggedInProfile.avatar_url || null);
     }
   }, [isOwnProfile, loggedInProfile]);
 
-  // Buscar avaliações do perfil
   useEffect(() => {
     if (profileId) {
       const fetchReviews = async () => {
@@ -133,24 +133,85 @@ const Profile = () => {
     }
   }, [profileId]);
 
-  const stats = useMemo(() => {
-    if (!reviews || !profileData) return { total: 0, average: 0, memberSince: "" };
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !loggedInProfile) return;
 
-    const total = reviews.length;
-    const average =
-      total > 0
-        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1)
-        : 0;
-    const memberSince = new Date(profileData.created_at).toLocaleDateString(
-      "pt-BR",
-      {
-        month: "long",
-        year: "numeric",
-      }
-    );
+    // Validações
+    const validTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Erro",
+        description:
+          "Por favor, selecione uma imagem válida (JPG, PNG, GIF ou WebP).",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    return { total, average, memberSince };
-  }, [reviews, profileData]);
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 2MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Cria um nome único para o arquivo
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${loggedInProfile.id}/${Date.now()}.${fileExt}`;
+
+      // Faz upload para o Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Pega a URL pública da imagem
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+      setAvatarUrl(publicUrl);
+      setImagePreview(publicUrl);
+
+      toast({
+        title: "Sucesso!",
+        description: "Imagem carregada com sucesso.",
+      });
+    } catch (error: any) {
+      console.error("Erro ao fazer upload:", error);
+      toast({
+        title: "Erro",
+        description:
+          error.message || "Não foi possível fazer upload da imagem.",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setAvatarUrl("");
+    setImagePreview(null);
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,7 +236,6 @@ const Profile = () => {
       toast({ title: "Sucesso!", description: "Seu perfil foi atualizado." });
       await refetchProfile();
       setIsEditModalOpen(false);
-      // Atualizar os dados do perfil exibido
       setProfileData({
         ...profileData!,
         name: name,
@@ -184,6 +244,26 @@ const Profile = () => {
     }
     setIsSubmitting(false);
   };
+
+  const stats = useMemo(() => {
+    if (!reviews || !profileData)
+      return { total: 0, average: 0, memberSince: "" };
+
+    const total = reviews.length;
+    const average =
+      total > 0
+        ? (reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(1)
+        : 0;
+    const memberSince = new Date(profileData.created_at).toLocaleDateString(
+      "pt-BR",
+      {
+        month: "long",
+        year: "numeric",
+      }
+    );
+
+    return { total, average, memberSince };
+  }, [reviews, profileData]);
 
   const sortedReviews = useMemo(() => {
     const sorted = [...reviews];
@@ -222,13 +302,17 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Button asChild variant="ghost" className="hidden md:inline-flex absolute top-4 left-4 z-20">
+      <Button
+        asChild
+        variant="ghost"
+        className="hidden md:inline-flex absolute top-4 left-4 z-20"
+      >
         <Link to="/">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para a Página Inicial
         </Link>
       </Button>
-      
+
       <ProfileHeader
         profile={{
           name: profileData.name,
@@ -239,8 +323,7 @@ const Profile = () => {
         onEditClick={() => setIsEditModalOpen(true)}
         showEditButton={isOwnProfile}
       />
-      
-      {/* Modal de edição só aparece se for o próprio perfil */}
+
       {isOwnProfile && (
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <DialogContent className="w-[95vw] max-w-md mx-auto">
@@ -248,15 +331,82 @@ const Profile = () => {
               <DialogTitle>Editar Perfil</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdateProfile} className="space-y-4">
+              {/* Upload de Foto */}
               <div className="space-y-2">
-                <Label htmlFor="avatar-url">URL do Avatar</Label>
+                <Label>Foto de Perfil</Label>
+                <div className="flex flex-col items-center gap-4">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={imagePreview || undefined} />
+                    <AvatarFallback className="text-2xl">
+                      {name?.charAt(0).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadingImage}
+                      onClick={() =>
+                        document.getElementById("avatar-upload")?.click()
+                      }
+                    >
+                      {uploadingImage ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Carregando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4 mr-2" />
+                          Escolher Foto
+                        </>
+                      )}
+                    </Button>
+
+                    {imagePreview && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Remover
+                      </Button>
+                    )}
+                  </div>
+
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    JPG, PNG ou GIF. Máximo 2MB.
+                  </p>
+                </div>
+              </div>
+
+              {/* URL do Avatar (alternativa) */}
+              <div className="space-y-2">
+                <Label htmlFor="avatar-url">Ou use uma URL de imagem</Label>
                 <Input
                   id="avatar-url"
                   type="url"
                   value={avatarUrl || ""}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  onChange={(e) => {
+                    setAvatarUrl(e.target.value);
+                    setImagePreview(e.target.value);
+                  }}
+                  placeholder="https://exemplo.com/foto.jpg"
                 />
               </div>
+
+              {/* Nome */}
               <div className="space-y-2">
                 <Label htmlFor="name">Nome de Exibição</Label>
                 <Input
@@ -266,8 +416,16 @@ const Profile = () => {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
-              <div className="flex justify-end">
-                <Button type="submit" disabled={isSubmitting}>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditModalOpen(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isSubmitting || uploadingImage}>
                   {isSubmitting && (
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   )}
@@ -302,8 +460,8 @@ const Profile = () => {
           <p className="text-muted-foreground">Carregando avaliações...</p>
         ) : reviews.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">
-            {isOwnProfile 
-              ? "Você ainda não avaliou nenhum jogo." 
+            {isOwnProfile
+              ? "Você ainda não avaliou nenhum jogo."
               : "Este usuário ainda não avaliou nenhum jogo."}
           </p>
         ) : (
