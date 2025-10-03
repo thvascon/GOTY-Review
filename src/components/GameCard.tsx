@@ -115,22 +115,21 @@ export const GameCard = ({
         </div>
       </div>
 
-      <div className="p-4 flex flex-col flex-grow">
+      <div className="p-4 flex flex-col flex-grow relative pb-14">
         <div className="mb-4">
-          {genres && genres.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {genres.map((genre, index) => (
-                <span 
-                  key={index}
-                  className="text-xs px-2 py-0.5 bg-muted/50 rounded border border-border/50 text-muted-foreground"
-                >
-                  {genre}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="h-56 flex flex-col">
+          <div className="h-64 flex flex-col">
+            {genres && genres.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-4 flex-shrink-0">
+                {genres.map((genre, index) => (
+                  <span
+                    key={index}
+                    className="text-xs px-2 py-0.5 bg-muted/50 rounded border border-border/50 text-muted-foreground"
+                  >
+                    {genre}
+                  </span>
+                ))}
+              </div>
+            )}
             {loggedInPlayerId && (
               <div className="mb-4 pb-3 border-b border-border flex-shrink-0 transition-opacity duration-200" style={{ opacity: ratings.length > 0 ? 1 : 0 }}>
                 <span className="text-xs text-muted-foreground block mb-2">Sua avaliação:</span>
@@ -168,7 +167,7 @@ export const GameCard = ({
           </div>
         </div>
 
-        <div className="pt-4 mt-4 border-t border-border">
+        <div className="absolute bottom-4 left-4 right-4 pt-4 border-t border-border bg-card">
           <div className="flex justify-between items-center text-xs text-muted-foreground uppercase">
             <span>Média da Galera</span>
             <span>
@@ -177,7 +176,7 @@ export const GameCard = ({
                 const average = validRatings.length > 0
                   ? (validRatings.reduce((sum, r) => sum + r.rating, 0) / validRatings.length).toFixed(1)
                   : '—';
-                return `${average} (${validRatings.length}/${ratings.length})`;
+                return `${average} (${validRatings.length})`;
               })()}
             </span>
           </div>
