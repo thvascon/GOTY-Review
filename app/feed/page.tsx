@@ -134,7 +134,32 @@ export default function FeedPage() {
   };
 
   if (authLoading || loading) {
-    return <div className="p-8 text-center">Carregando feed...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-10 h-10 bg-muted rounded animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-8 w-64 bg-muted rounded animate-pulse" />
+              <div className="h-4 w-80 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-card border rounded-lg p-4">
+                <div className="flex gap-4">
+                  <div className="w-5 h-5 rounded-full bg-muted animate-pulse" />
+                  <div className="flex-grow space-y-2">
+                    <div className="h-4 w-3/4 bg-muted rounded animate-pulse" />
+                    <div className="h-16 w-16 bg-muted rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

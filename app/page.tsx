@@ -442,7 +442,28 @@ export default function HomePage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center">Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="bg-black py-6 pt-1">
+          <div className="w-full px-4">
+            <div className="flex items-center gap-4 py-4">
+              <div className="h-6 w-6 rounded-full bg-muted animate-pulse" />
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="px-4 -mt-10">
+          <main className="bg-background rounded-2xl shadow-xl border border-border/50 p-8">
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-muted animate-pulse" />
+                <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   if (!session) {
@@ -459,7 +480,28 @@ export default function HomePage() {
   }
 
   if (!profile) {
-    return <div className="p-8 text-center">Carregando perfil...</div>;
+    return (
+      <div className="min-h-screen bg-black">
+        <div className="bg-black py-6 pt-1">
+          <div className="w-full px-4">
+            <div className="flex items-center gap-4 py-4">
+              <div className="h-6 w-6 rounded-full bg-muted animate-pulse" />
+              <div className="h-6 w-32 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+        <div className="px-4 -mt-10">
+          <main className="bg-background rounded-2xl shadow-xl border border-border/50 p-8">
+            <div className="flex items-center justify-center py-12">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-muted animate-pulse" />
+                <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
   }
 
   console.log("Seções carregadas:", sections);

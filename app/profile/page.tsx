@@ -292,7 +292,24 @@ function ProfilePageContent() {
   const bannerImage = sortedReviews[0]?.games?.cover_image;
 
   if (authLoading || profileLoading) {
-    return <div className="p-8 text-center">Carregando perfil...</div>;
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="relative">
+          <div className="w-full h-64 bg-muted animate-pulse" />
+          <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
+            <div className="w-32 h-32 rounded-full bg-muted animate-pulse border-4 border-background" />
+          </div>
+        </div>
+        <div className="mt-20 text-center px-4">
+          <div className="h-8 w-48 bg-muted rounded mx-auto mb-4 animate-pulse" />
+          <div className="flex justify-center gap-8 mb-8">
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-20 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!profileData) {
