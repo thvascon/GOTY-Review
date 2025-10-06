@@ -21,7 +21,7 @@ export function BuscaJogo({ onGameSelected }: BuscaJogoProps) {
   const [resultados, setResultados] = useState<Game[]>([]);
   const [jogoSelecionado, setJogoSelecionado] = useState<Game | null>(null);
 
-  const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
+  const API_KEY = process.env.NEXT_PUBLIC_RAWG_API_KEY;
 
   useEffect(() => {
     if (termoDeBusca.trim() === '') {

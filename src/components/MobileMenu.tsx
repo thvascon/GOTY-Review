@@ -1,5 +1,7 @@
+"use client";
+
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Menu, X, Gamepad2, UserPlus, Activity, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -39,8 +41,8 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
         
         <div className="flex flex-col gap-3 mt-6">
           {/* Perfil */}
-          <Link 
-            to="/profile"
+          <Link
+            href={profile?.id ? `/profile?id=${profile.id}` : "/profile"}
             onClick={() => handleMenuItemClick()}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
           >
@@ -60,7 +62,7 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
 
           {/* Feed */}
           <Link
-            to="/feed"
+            href="/feed"
             onClick={() => handleMenuItemClick()}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
           >

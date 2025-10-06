@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { AddGameDialog } from "./AddGameDialog";
 import { MobileMenu } from "./MobileMenu";
@@ -6,7 +8,7 @@ import { LogOut, Gamepad2, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus } from "lucide-react";
@@ -103,14 +105,14 @@ export const Header = ({
             Adicionar Novo Jogo
           </Button>
           <Button asChild variant="outline">
-            <Link to="/feed">
+            <Link href="/feed">
               <Activity className="w-4 h-4 mr-2" />
               Feed
             </Link>
           </Button>
 
           <Button asChild variant="outline" className="gap-2">
-            <Link to="/profile">
+            <Link href={profile?.id ? `/profile?id=${profile.id}` : "/profile"}>
               <Avatar className="w-6 h-6">
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="text-xs">

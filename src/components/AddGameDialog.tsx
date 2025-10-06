@@ -81,7 +81,7 @@ export const AddGameDialog = ({
   const [sections, setSections] = useState<Section[]>([]);
   const [searchResults, setSearchResults] = useState<ApiGame[]>([]);
   const selectionMade = useRef(false);
-  const API_KEY = import.meta.env.VITE_RAWG_API_KEY;
+  const API_KEY = process.env.NEXT_PUBLIC_RAWG_API_KEY;
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;

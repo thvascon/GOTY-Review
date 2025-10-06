@@ -1,3 +1,5 @@
+"use client";
+
 import { StarRating } from './StarRating';
 import { PlayerLink } from './PlayerLink';
 import { cn } from '@/lib/utils';
@@ -11,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 interface GameCardProps {
   id: string;
@@ -68,13 +71,16 @@ export const GameCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ 
-        duration: 0.4, 
-        delay: index * 0.05,
+      whileHover={{ scale: 1.03 }}
+      transition={{
+        duration: 0.3,
         ease: [0.4, 0, 0.2, 1]
       }}
-      whileHover={{ scale: 1.03 }}
-      className={cn("bg-card rounded-lg shadow-lg overflow-hidden flex flex-col cursor-pointer relative z-0 hover:z-10 group", className)}
+      className={cn(
+        "bg-gradient-to-br from-card to-card/80 rounded-xl shadow-lg overflow-hidden flex flex-col cursor-pointer relative z-0 group",
+        "hover:shadow-[0_8px_40px_hsl(var(--primary)/0.3)] hover:border hover:border-primary/50",
+        className
+      )}
       onClick={onClick}
     >
       {onRemoveGame && (
@@ -100,15 +106,17 @@ export const GameCard = ({
       )}
 
       <div className="relative w-full h-48 bg-muted">
-        <img
-          src={coverImage}
+        <Image
+          src={coverImage || '/placeholder.svg'}
           alt={`Capa de ${title}`}
-          className="absolute inset-0 w-full h-full object-cover object-top"
-          onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
-          loading="lazy"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="object-cover object-top"
+          quality={85}
+          priority={index < 3}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-        <div className="absolute bottom-3 left-3 right-3">
+        <div className="absolute bottom-3 left-3 right-3 z-10">
           <h3 className="text-white font-bold text-lg line-clamp-2 drop-shadow-lg">
             {title}
           </h3>
@@ -167,7 +175,7 @@ export const GameCard = ({
           </div>
         </div>
 
-        <div className="absolute bottom-4 left-4 right-4 pt-4 border-t border-border bg-card">
+        <div className="absolute bottom-4 left-4 right-4 pt-4 border-t border-border bg-gradient-to-br from-card to-card/80 transition-colors">
           <div className="flex justify-between items-center text-xs text-muted-foreground uppercase">
             <span>Média da Galera</span>
             <span>

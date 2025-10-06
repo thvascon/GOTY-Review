@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+"use client";
+
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PlayerLinkProps {
@@ -17,8 +19,8 @@ export const PlayerLink = ({
   className = ""
 }: PlayerLinkProps) => {
   return (
-    <Link 
-      to={`/profile?id=${playerId}`}
+    <Link
+      href={`/profile?id=${playerId}`}
       className={`inline-flex items-center gap-2 hover:underline text-foreground hover:text-primary transition-colors ${className}`}
     >
       {showAvatar && (

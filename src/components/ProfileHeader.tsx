@@ -1,7 +1,9 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Gamepad2, Star, Calendar, Edit, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 interface ProfileHeaderProps {
   profile: {
@@ -33,7 +35,7 @@ export const ProfileHeader = ({
         size="icon"
         className="md:hidden absolute top-4 left-4 z-20 text-white"
       >
-        <Link to="/">
+        <Link href="/">
           <ArrowLeft />
         </Link>
       </Button>
