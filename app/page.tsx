@@ -527,7 +527,7 @@ export default function HomePage() {
 
         {/* Container flutuante do conteúdo principal */}
         <div className="px-4 -mt-10">
-          <main className="bg-background rounded-2xl shadow-xl border border-border/50 p-4 min-h-screen">
+          <main className="bg-background rounded-2xl shadow-xl border border-border/50 px-4 pt-4 min-h-screen">
             {session ? (
               <>
                 <Accordion
