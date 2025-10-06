@@ -36,8 +36,20 @@ export const Header = ({
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    try {
+      // Força o logout e limpa o localStorage
+      await supabase.auth.signOut({ scope: 'local' });
+
+      // Limpa qualquer cache remanescente
+      localStorage.removeItem('supabase.auth.token');
+
+      // Força reload para garantir que tudo seja limpo
+      window.location.reload();
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+      // Mesmo com erro, tenta limpar e recarregar
+      window.location.reload();
+    }
   };
 
   return (
