@@ -1,26 +1,31 @@
 "use client";
 
-import { StarRating } from './StarRating';
-import { PlayerLink } from './PlayerLink';
-import { cn } from '@/lib/utils';
-import { MoreVertical, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { StarRating } from "./StarRating";
+import { PlayerLink } from "./PlayerLink";
+import { cn } from "@/lib/utils";
+import { MoreVertical, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import Image from 'next/image';
+import React, { useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import Image from "next/image";
 
 interface GameCardProps {
   id: string;
   title: string;
   coverImage: string;
   genres?: string[];
-  ratings: { playerId: string; rating: number; playerName: string; playerAvatar?: string | null }[];
+  ratings: {
+    playerId: string;
+    rating: number;
+    playerName: string;
+    playerAvatar?: string | null;
+  }[];
   onRatingChange: (gameId: string, playerId: string, rating: number) => void;
   onRemoveGame?: (gameId: string) => void;
   onClick?: () => void;
@@ -45,14 +50,14 @@ export const GameCard = ({
   const [isRemoving, setIsRemoving] = useState(false);
 
   const { loggedInRating, otherRatings } = useMemo(() => {
-    const userRating = loggedInPlayerId 
+    const userRating = loggedInPlayerId
       ? ratings.find((r) => r.playerId === loggedInPlayerId)
       : undefined;
-    
+
     const others = loggedInPlayerId
       ? ratings.filter((r) => r.playerId !== loggedInPlayerId)
       : ratings;
-    
+
     return { loggedInRating: userRating, otherRatings: others };
   }, [ratings, loggedInPlayerId]);
 
@@ -74,11 +79,11 @@ export const GameCard = ({
       whileHover={{ scale: 1.03 }}
       transition={{
         duration: 0.3,
-        ease: [0.4, 0, 0.2, 1]
+        ease: [0.4, 0, 0.2, 1],
       }}
       className={cn(
         "bg-gradient-to-br from-card to-card/80 rounded-xl shadow-lg overflow-hidden flex flex-col cursor-pointer relative z-0 group",
-        "hover:shadow-[0_8px_40px_hsl(var(--primary)/0.3)] hover:border hover:border-primary/50",
+        "hover:shadow-[0_8px_40px_rgba(156,163,175,0.1)]", // <-- Linha modificada
         className
       )}
       onClick={onClick}
@@ -107,7 +112,7 @@ export const GameCard = ({
 
       <div className="relative w-full h-48 bg-muted">
         <Image
-          src={coverImage || '/placeholder.svg'}
+          src={coverImage || "/placeholder.svg"}
           alt={`Capa de ${title}`}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -139,13 +144,20 @@ export const GameCard = ({
               </div>
             )}
             {loggedInPlayerId && (
-              <div className="mb-4 pb-3 border-b border-border flex-shrink-0 transition-opacity duration-200" style={{ opacity: ratings.length > 0 ? 1 : 0 }}>
-                <span className="text-xs text-muted-foreground block mb-2">Sua avaliação:</span>
+              <div
+                className="mb-4 pb-3 border-b border-border flex-shrink-0 transition-opacity duration-200"
+                style={{ opacity: ratings.length > 0 ? 1 : 0 }}
+              >
+                <span className="text-xs text-muted-foreground block mb-2">
+                  Sua avaliação:
+                </span>
                 <div className="min-h-[28px]">
                   {loggedInRating && (
                     <StarRating
                       rating={loggedInRating.rating}
-                      onRatingChange={(newRating) => onRatingChange(id, loggedInPlayerId, newRating)}
+                      onRatingChange={(newRating) =>
+                        onRatingChange(id, loggedInPlayerId, newRating)
+                      }
                       size={16}
                     />
                   )}
@@ -155,7 +167,10 @@ export const GameCard = ({
 
             <div className="space-y-2 flex-grow overflow-hidden">
               {otherRatings.map((rating) => (
-                <div key={rating.playerId} className="flex items-center justify-between">
+                <div
+                  key={rating.playerId}
+                  className="flex items-center justify-between"
+                >
                   <PlayerLink
                     playerId={rating.playerId}
                     playerName={rating.playerName}
@@ -180,10 +195,14 @@ export const GameCard = ({
             <span>Média da Galera</span>
             <span>
               {(() => {
-                const validRatings = ratings.filter(r => r.rating > 0);
-                const average = validRatings.length > 0
-                  ? (validRatings.reduce((sum, r) => sum + r.rating, 0) / validRatings.length).toFixed(1)
-                  : '—';
+                const validRatings = ratings.filter((r) => r.rating > 0);
+                const average =
+                  validRatings.length > 0
+                    ? (
+                        validRatings.reduce((sum, r) => sum + r.rating, 0) /
+                        validRatings.length
+                      ).toFixed(1)
+                    : "—";
                 return `${average} (${validRatings.length})`;
               })()}
             </span>
