@@ -61,7 +61,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
       if (session) {
         fetchSessionAndProfile();
-      } 
+      } else {
+        setLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();

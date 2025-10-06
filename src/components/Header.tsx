@@ -35,6 +35,11 @@ export const Header = ({
   const [isAddGameOpen, setIsAddGameOpen] = useState(false);
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
+
   return (
     <>
       <header
@@ -60,7 +65,7 @@ export const Header = ({
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => supabase.auth.signOut()}
+              onClick={handleLogout}
             >
               <LogOut className="w-5 h-5" />
             </Button>
@@ -112,7 +117,7 @@ export const Header = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => supabase.auth.signOut()}
+            onClick={handleLogout}
           >
             <LogOut className="w-5 h-5" />
           </Button>
