@@ -77,8 +77,6 @@
 
   body {
     @apply bg-background text-foreground font-inter antialiased;
-    background-image: radial-gradient(circle at 20% 80%, hsl(var(--primary) / 0.05) 0%, transparent 50%),
-                      radial-gradient(circle at 80% 20%, hsl(var(--accent) / 0.05) 0%, transparent 50%);
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -112,52 +110,25 @@
 @layer components {
   /* Game card hover effects - Otimizado para performance */
   .game-card {
-    @apply relative overflow-hidden rounded-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm;
+    @apply relative overflow-hidden rounded-xl bg-card;
     box-shadow: var(--shadow-card);
-    transition: transform 150ms ease-out, box-shadow 150ms ease-out;
-    will-change: transform;
-    transform: translateZ(0);
+    transition: transform 100ms ease-out;
   }
 
   .game-card:hover {
-    @apply scale-[1.02];
+    @apply scale-[1.01];
     box-shadow: var(--shadow-card-hover);
-    border: 1px solid hsl(var(--primary) / 0.5);
-  }
-
-  .game-card::before {
-    content: '';
-    @apply absolute inset-0 opacity-0;
-    background: var(--gradient-glow);
-    z-index: -1;
-    transition: opacity 200ms ease-out;
-  }
-
-  .game-card:hover::before {
-    @apply opacity-100;
   }
 
   /* Glow button effect */
   .btn-glow {
-    @apply relative overflow-hidden;
+    @apply relative;
     background: var(--gradient-primary);
-    transition: var(--transition-smooth);
+    transition: opacity 150ms ease-out;
   }
 
   .btn-glow:hover {
-    @apply brightness-110;
-    box-shadow: var(--shadow-glow);
-  }
-
-  .btn-glow::before {
-    content: '';
-    @apply absolute inset-0 opacity-0 transition-opacity duration-300;
-    background: linear-gradient(45deg, transparent 30%, hsl(var(--primary-foreground) / 0.1) 50%, transparent 70%);
-  }
-
-  .btn-glow:hover::before {
-    @apply opacity-100;
-    animation: shimmer 1.5s infinite;
+    @apply opacity-90;
   }
 
   /* Star rating colors */
@@ -170,11 +141,6 @@
 @layer utilities {
   .font-poppins { font-family: 'Poppins', sans-serif; }
   .font-inter { font-family: 'Inter', sans-serif; }
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
 }
 
 .light {

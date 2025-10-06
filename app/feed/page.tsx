@@ -149,7 +149,7 @@ export default function FeedPage() {
             </Button>
             <div>
               <h1 className="text-3xl font-bold flex items-center gap-2">
-                <Activity className="w-8 h-8 text-purple-500" />
+                <Activity className="w-8 h-8 text-primary" />
                 Feed de Atividades
               </h1>
               <p className="text-muted-foreground mt-1">

@@ -468,18 +468,24 @@ export default function HomePage() {
   return (
     <>
       <Auth open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <Header
-            onAddGame={handleAddGame}
-            onAddPerson={handleAddPerson}
-            existingPersonNames={players.map((p) => p.name)}
-            searchTerm={searchTerm}
-            onSearchTerm={setSearchTerm}
-            session={session}
-          />
+      <div className="min-h-screen bg-black">
+        {/* Header com fundo escuro */}
+        <div className="bg-black py-6 pt-1">
+          <div className="w-full px-4">
+            <Header
+              onAddGame={handleAddGame}
+              onAddPerson={handleAddPerson}
+              existingPersonNames={players.map((p) => p.name)}
+              searchTerm={searchTerm}
+              onSearchTerm={setSearchTerm}
+              session={session}
+            />
+          </div>
+        </div>
 
-          <main>
+        {/* Container flutuante do conteúdo principal */}
+        <div className="px-4 -mt-10">
+          <main className="bg-background rounded-2xl shadow-xl border border-border/50 p-4 min-h-screen">
             {session ? (
               <>
                 <Accordion
@@ -544,6 +550,7 @@ export default function HomePage() {
             )}
           </main>
         </div>
+
         <GameDetailsModal
           game={selectedGameDetails}
           isOpen={isModalOpen}

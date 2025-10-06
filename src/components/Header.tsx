@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AddGameDialog } from "./AddGameDialog";
 import { MobileMenu } from "./MobileMenu";
 import { cn } from "@/lib/utils";
-import { LogOut, Activity } from "lucide-react";
+import { LogOut, Activity, Search } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,11 +65,12 @@ export const Header = ({
     <>
       <header
         className={cn(
-          "flex flex-col sm:flex-row items-center justify-between gap-6 mb-8",
+          "relative flex items-center gap-3 mb-3 flex-wrap md:flex-nowrap",
           className
         )}
       >
-        <div className="flex items-center w-full sm:w-auto justify-between">
+        {/* Logo */}
+        <div className="flex items-center flex-shrink-0">
           <h1 className="text-xl font-bold flex items-center gap-2">
             {currentTheme === "light" ? (
               <Image
@@ -86,56 +87,45 @@ export const Header = ({
                 alt="GOTY Review Logo"
                 width={160}
                 height={160}
-                className="w-24 h-24 -ml-2" 
+                className="w-24 h-24 -ml-2"
                 priority
               />
             )}
           </h1>
+        </div>
 
-          {/* Controles Mobile */}
-          <div className="flex items-center gap-2 md:hidden">
-            <InviteCodeButton />
-            <ModeToggle />
-            <MobileMenu
-              onAddGameClick={() => setIsAddGameOpen(true)}
-              onAddPersonClick={() => setIsAddPersonOpen(true)}
+        {/* Barra de busca - Absolutamente centralizada (Desktop) */}
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2 w-full max-w-md px-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar jogo..."
+              value={searchTerm}
+              onChange={(e) => onSearchTerm?.(e.target.value)}
+              className="w-full pl-10 rounded-full"
             />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
           </div>
         </div>
 
-        <div className="w-full sm:w-96">
-          <Input
-            type="text"
-            placeholder="Buscar jogo..."
-            value={searchTerm}
-            onChange={(e) => onSearchTerm?.(e.target.value)}
-          />
-        </div>
-
-        {/* Botões Desktop - Simples */}
-        <div className="hidden md:flex flex-row gap-3">
+        {/* Botões Desktop - Direita */}
+        <div className="hidden md:flex items-center gap-2 flex-shrink-0 ml-auto">
           <Button
             onClick={() => setIsAddGameOpen(true)}
-            className="btn-glow flex items-center gap-2"
+            className="btn-glow"
+            size="sm"
           >
-            <Plus className="w-4 h-4" />
-            Adicionar Novo Jogo
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar
           </Button>
-          <Button asChild variant="outline">
+
+          <Button asChild variant="outline" size="icon">
             <Link href="/feed">
-              <Activity className="w-4 h-4 mr-2" />
-              Feed
+              <Activity className="w-4 h-4" />
             </Link>
           </Button>
 
-          <Button asChild variant="outline" className="gap-2">
+          <Button asChild variant="outline" size="icon">
             <Link href={profile?.id ? `/profile?id=${profile.id}` : "/profile"}>
               <Avatar className="w-6 h-6">
                 <AvatarImage src={profile?.avatar_url || undefined} />
@@ -143,15 +133,12 @@ export const Header = ({
                   {profile?.name?.charAt(0).toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              Meu Perfil
             </Link>
           </Button>
-        </div>
 
-        {/* Controles Desktop direita */}
-        <div className="hidden md:flex items-center gap-2">
           <InviteCodeButton />
           <ModeToggle />
+
           <Button
             variant="ghost"
             size="icon"
@@ -159,6 +146,27 @@ export const Header = ({
           >
             <LogOut className="w-5 h-5" />
           </Button>
+        </div>
+
+        {/* Controles Mobile */}
+        <div className="flex items-center gap-2 md:hidden ml-auto">
+          <ModeToggle />
+          <MobileMenu
+            onAddGameClick={() => setIsAddGameOpen(true)}
+            onAddPersonClick={() => setIsAddPersonOpen(true)}
+          />
+        </div>
+
+        {/* Barra de busca Mobile - Ocupa linha inteira */}
+        <div className="w-full md:hidden relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar jogo..."
+            value={searchTerm}
+            onChange={(e) => onSearchTerm?.(e.target.value)}
+            className="w-full pl-10 rounded-full"
+          />
         </div>
       </header>
 
