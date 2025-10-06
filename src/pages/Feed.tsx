@@ -18,6 +18,7 @@ interface ActivityItem {
   activity_type: string;
   game_id: string | null;
   rating: number | null;
+  group_id: string | null;
   metadata: {
     game_name?: string;
     game_cover?: string;
@@ -28,7 +29,7 @@ interface ActivityItem {
 }
 
 const Feed = () => {
-  const { session, loading: authLoading } = useAuth();
+  const { session, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,10 +42,16 @@ const Feed = () => {
 
   useEffect(() => {
     const fetchActivities = async () => {
+      if (!profile?.group_id) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       const { data, error } = await supabase
         .from("activities")
         .select("*")
+        .eq("group_id", profile.group_id)
         .order("created_at", { ascending: false })
         .limit(50);
 
@@ -56,14 +63,19 @@ const Feed = () => {
       setLoading(false);
     };
 
-    if (session) {
+    if (session && profile?.group_id) {
       fetchActivities();
 
       const channel = supabase
         .channel("activities-changes")
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "activities" },
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "activities",
+            filter: `group_id=eq.${profile.group_id}`
+          },
           (payload) => {
             setActivities((prev) => [payload.new as ActivityItem, ...prev]);
           }
@@ -74,7 +86,7 @@ const Feed = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [session]);
+  }, [session, profile]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { Plus } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
+import { InviteCodeButton } from "@/components/InviteCodeButton";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -50,6 +51,7 @@ export const Header = ({
 
           {/* Controles Mobile */}
           <div className="flex items-center gap-2 md:hidden">
+            <InviteCodeButton />
             <ModeToggle />
             <MobileMenu
               onAddGameClick={() => setIsAddGameOpen(true)}
@@ -105,6 +107,7 @@ export const Header = ({
 
         {/* Controles Desktop direita */}
         <div className="hidden md:flex items-center gap-2">
+          <InviteCodeButton />
           <ModeToggle />
           <Button
             variant="ghost"

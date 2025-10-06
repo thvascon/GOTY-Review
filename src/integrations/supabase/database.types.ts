@@ -16,20 +16,26 @@ export type Database = {
           id: string;
           name: string;
           section_id: string | null;
+          group_id: string | null;
+          genres: string[] | null;
         };
         Insert: {
-          cover_image_url?: string | null;
+          cover_image?: string | null;
           created_at?: string;
           id?: string;
           name: string;
           section_id?: string | null;
+          group_id?: string | null;
+          genres?: string[] | null;
         };
         Update: {
-          cover_image_url?: string | null;
+          cover_image?: string | null;
           created_at?: string;
           id?: string;
           name?: string;
           section_id?: string | null;
+          group_id?: string | null;
+          genres?: string[] | null;
         };
         Relationships: [
           {
@@ -37,6 +43,13 @@ export type Database = {
             columns: ["section_id"];
             isOneToOne: false;
             referencedRelation: "sections";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "games_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "groups";
             referencedColumns: ["id"];
           }
         ];
@@ -48,18 +61,21 @@ export type Database = {
           name: string;
           user_id: string | null;
           avatar_url?: string | null;
+          group_id: string | null;
         };
         Insert: {
           created_at?: string;
           id?: string;
           name: string;
           user_id?: string | null;
+          group_id?: string | null;
         };
         Update: {
           created_at?: string;
           id?: string;
           name?: string;
           user_id?: string | null;
+          group_id?: string | null;
         };
         Relationships: [
           {
@@ -67,6 +83,13 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "people_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "groups";
             referencedColumns: ["id"];
           }
         ];
@@ -121,18 +144,29 @@ export type Database = {
           created_at: string;
           id: string;
           title: string;
+          group_id: string | null;
         };
         Insert: {
           created_at?: string;
           id?: string;
           title: string;
+          group_id?: string | null;
         };
         Update: {
           created_at?: string;
           id?: string;
           title?: string;
+          group_id?: string | null;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "sections_group_id_fkey";
+            columns: ["group_id"];
+            isOneToOne: false;
+            referencedRelation: "groups";
+            referencedColumns: ["id"];
+          }
+        ];
       };
       activities: {
         Row: {
@@ -179,12 +213,47 @@ export type Database = {
           }
         ];
       };
+      groups: {
+        Row: {
+          id: string;
+          name: string;
+          invite_code: string;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          invite_code: string;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          invite_code?: string;
+          created_at?: string;
+          created_by?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "groups_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      generate_invite_code: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
     };
     Enums: {
       [_ in never]: never;

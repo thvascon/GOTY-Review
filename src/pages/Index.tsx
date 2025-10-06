@@ -18,6 +18,7 @@ import {
 import { useAuth } from "@/components/AuthProvider";
 import { Auth } from "@/components/Auth";
 import { GameList } from "@/components/GameList";
+import { GroupSelector } from "@/components/GroupSelector";
 
 interface Player {
   id: string;
@@ -69,18 +70,29 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (session && profile && profile.name !== session.user.email) {
+    if (session && profile && profile.name !== session.user.email && profile.group_id) {
       const fetchData = async () => {
       try {
-        console.log("Buscando todos os dados em paralelo...");
+        console.log("Buscando todos os dados do grupo...");
 
-        const [peopleRes, sectionsRes, gamesRes, reviewsRes] =
-          await Promise.all([
-            supabase.from("people").select("id, name, avatar_url"),
-            supabase.from("sections").select("*"),
-            supabase.from("games").select("*"),
-            supabase.from("reviews").select("*"),
-          ]);
+        const peopleRes = await supabase
+          .from("people")
+          .select("id, name, avatar_url")
+          .eq("group_id", profile.group_id!);
+
+        const sectionsRes = await supabase
+          .from("sections")
+          .select("*")
+          .eq("group_id", profile.group_id!);
+
+        const gamesRes = await supabase
+          .from("games")
+          .select("*")
+          .eq("group_id", profile.group_id!);
+
+        const reviewsRes = await supabase
+          .from("reviews")
+          .select("*");
 
         if (
           peopleRes.error ||
@@ -242,6 +254,15 @@ const Index = () => {
     sectionId?: string;
     genres?: string[];
   }) => {
+    if (!profile?.group_id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar em um grupo para adicionar jogos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { data, error } = await supabase
       .from("games")
       .insert([
@@ -250,6 +271,7 @@ const Index = () => {
           cover_image: gameData.coverImage || "/placeholder.svg",
           section_id: gameData.sectionId || null,
           genres: gameData.genres || [],
+          group_id: profile.group_id,
         },
       ])
       .select()
@@ -417,7 +439,7 @@ const Index = () => {
     );
   };
 
-    if (loading) {
+  if (loading) {
     return <div className="p-8 text-center">Carregando...</div>;
   }
 
@@ -425,10 +447,21 @@ const Index = () => {
     return <Login />;
   }
 
-
   if (profile && session.user.email === profile.name) {
     return <ProfileSetup />;
   }
+
+  // Show GroupSelector if user doesn't have a group
+  if (session && profile && !profile.group_id) {
+    return <GroupSelector userId={session.user.id} onGroupSelected={() => window.location.reload()} />;
+  }
+
+  if (!profile) {
+    return <div className="p-8 text-center">Carregando perfil...</div>;
+  }
+
+  console.log("Seções carregadas:", sections);
+  console.log("Jogos carregados:", games);
 
   return (
     <>

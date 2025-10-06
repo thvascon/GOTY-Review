@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/AuthProvider";
 
 const gameSchema = z.object({
   title: z.string().trim().min(1, { message: "O título não pode estar vazio" }),
@@ -63,12 +64,15 @@ export const AddGameDialog = ({
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
 }: AddGameDialogProps) => {
+  const { profile } = useAuth();
   const [internalOpen, setInternalOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     coverImage: "",
     sectionId: "",
   });
+  const [newSectionName, setNewSectionName] = useState("");
+  const [isCreatingSection, setIsCreatingSection] = useState(false);
   const [selectedGameGenres, setSelectedGameGenres] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,11 +87,12 @@ export const AddGameDialog = ({
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !profile?.group_id) return;
     const fetchSections = async () => {
       const { data, error } = await supabase
         .from("sections")
-        .select("id, title");
+        .select("id, title")
+        .eq("group_id", profile.group_id);
       if (error) {
         console.error("Erro ao buscar seções:", error);
         return;
@@ -95,7 +100,7 @@ export const AddGameDialog = ({
       setSections(data || []);
     };
     fetchSections();
-  }, [open]);
+  }, [open, profile]);
 
   useEffect(() => {
     if (selectionMade.current) {
@@ -176,6 +181,40 @@ export const AddGameDialog = ({
         setErrors(newErrors);
       }
       return false;
+    }
+  };
+
+  const handleCreateSection = async () => {
+    if (!newSectionName.trim() || !profile?.group_id) return;
+
+    setIsCreatingSection(true);
+    try {
+      const { data, error } = await supabase
+        .from("sections")
+        .insert([{ title: newSectionName.trim(), group_id: profile.group_id }])
+        .select()
+        .single();
+
+      if (error) {
+        toast({
+          title: "Erro ao criar seção",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setSections([...sections, data]);
+      setFormData({ ...formData, sectionId: data.id });
+      setNewSectionName("");
+      toast({
+        title: "Seção criada!",
+        description: `"${data.title}" foi criada com sucesso.`,
+      });
+    } catch (error) {
+      console.error("Erro ao criar seção:", error);
+    } finally {
+      setIsCreatingSection(false);
     }
   };
 
@@ -278,24 +317,45 @@ export const AddGameDialog = ({
 
           <div className="space-y-2">
             <Label>Seção *</Label>
-            <Select
-              value={formData.sectionId}
-              onValueChange={(value) => handleInputChange("sectionId", value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma seção" />
-              </SelectTrigger>
-              <SelectContent>
-                {sections.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {sections.length > 0 ? (
+              <Select
+                value={formData.sectionId}
+                onValueChange={(value) => handleInputChange("sectionId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma seção" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sections.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma seção criada ainda. Crie uma abaixo.</p>
+            )}
             {errors.sectionId && (
               <p className="text-sm text-destructive">{errors.sectionId}</p>
             )}
+
+            <div className="flex gap-2 pt-2">
+              <Input
+                placeholder="Nome da nova seção"
+                value={newSectionName}
+                onChange={(e) => setNewSectionName(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateSection())}
+              />
+              <Button
+                type="button"
+                onClick={handleCreateSection}
+                disabled={isCreatingSection || !newSectionName.trim()}
+                size="sm"
+              >
+                {isCreatingSection ? "Criando..." : "+ Criar"}
+              </Button>
+            </div>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
