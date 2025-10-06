@@ -4,7 +4,8 @@ import { useState } from "react";
 import { AddGameDialog } from "./AddGameDialog";
 import { MobileMenu } from "./MobileMenu";
 import { cn } from "@/lib/utils";
-import { LogOut, Gamepad2, Activity } from "lucide-react";
+import { LogOut, Activity } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +15,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Plus } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
 import { InviteCodeButton } from "@/components/InviteCodeButton";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -34,8 +36,13 @@ export const Header = ({
   onSearchTerm,
 }: HeaderProps) => {
   const { profile } = useAuth();
+  const { theme, resolvedTheme } = useTheme();
   const [isAddGameOpen, setIsAddGameOpen] = useState(false);
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
+
+  const currentTheme = (theme === 'system' ? resolvedTheme : theme) || 'light';
+
+  console.log('Tema atual:', currentTheme);
 
   const handleLogout = async () => {
     try {
@@ -58,14 +65,31 @@ export const Header = ({
     <>
       <header
         className={cn(
-          "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8",
+          "flex flex-col sm:flex-row items-center justify-between gap-6 mb-8",
           className
         )}
       >
         <div className="flex items-center w-full sm:w-auto justify-between">
           <h1 className="text-xl font-bold flex items-center gap-2">
-            <Gamepad2 className="w-6 h-6 text-purple-500" />
-            GOTY <span className="font-normal">Review</span>
+            {currentTheme === "light" ? (
+              <Image
+                src="/logo3.svg"
+                alt="GOTY Review Logo"
+                width={160}
+                height={160}
+                className="w-24 h-24 -ml-2"
+                priority
+              />
+            ) : (
+              <Image
+                src="/logo.svg"
+                alt="GOTY Review Logo"
+                width={160}
+                height={160}
+                className="w-24 h-24 -ml-2" 
+                priority
+              />
+            )}
           </h1>
 
           {/* Controles Mobile */}

@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Gamepad2, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FaGithub, FaGoogle } from 'react-icons/fa';
+import Image from 'next/image';
 
 export const Login = () => {
   const { toast } = useToast();
@@ -70,8 +71,14 @@ export const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
-          <Gamepad2 className="w-10 h-10 text-primary mb-2" />
-          <h1 className="text-2xl font-bold text-foreground">GOTY Review</h1>
+          <Image
+            src="/logo.svg"
+            alt="GOTY Review Logo"
+            width={100}
+            height={100}
+            className="w-32 h-32 mb-2"
+          />
+          <h1 className="text-2xl font-bold text-foreground"></h1>
         </div>
 
         <div className="bg-card p-8 rounded-lg border">

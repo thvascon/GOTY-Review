@@ -20,7 +20,6 @@ const AuthContext = createContext<{
 }>({ session: null, profile: null, loading: true, refetchProfile: () => {} });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  console.log("Objeto supabase DENTRO do AuthProvider:", supabase);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);

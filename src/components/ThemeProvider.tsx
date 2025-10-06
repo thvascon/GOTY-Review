@@ -13,6 +13,7 @@ type ThemeProviderProps = {
 type ThemeProviderState = {
   theme: Theme
   setTheme: (theme: Theme) => void
+  resolvedTheme?: "light" | "dark"
 }
 
 const initialState: ThemeProviderState = {
@@ -37,6 +38,8 @@ export function ThemeProvider({
     }
   })
 
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark")
+
   useEffect(() => {
     const root = window.document.documentElement;
 
@@ -54,12 +57,12 @@ export function ThemeProvider({
     }
 
     root.classList.add(effectiveTheme);
-    
-    console.log("Tema aplicado:", effectiveTheme, "Classes:", root.classList.toString());
+    setResolvedTheme(effectiveTheme);
   }, [theme])
 
   const value = {
     theme,
+    resolvedTheme,
     setTheme: (newTheme: Theme) => {
       try {
         localStorage.setItem(storageKey, newTheme);

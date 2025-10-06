@@ -37,7 +37,7 @@ export const ProfileSetup = () => {
       <div className="w-full max-w-sm">
         <div className="flex flex-col items-center mb-6">
           <Gamepad2 className="w-10 h-10 text-primary mb-2" />
-          <h1 className="text-2xl font-bold text-foreground">GOTY Review</h1>
+          <h1 className="text-2xl font-bold text-foreground">CÓDEX</h1>
         </div>
 
         <div className="bg-card p-8 rounded-lg border">
