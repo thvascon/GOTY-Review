@@ -88,20 +88,6 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
               <span className="text-xs text-muted-foreground">Novo jogo na biblioteca</span>
             </div>
           </button>
-
-          {/* Adicionar Pessoa */}
-          <button
-            onClick={() => handleMenuItemClick(onAddPersonClick)}
-            className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full text-left"
-          >
-            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center">
-              <UserPlus className="w-5 h-5 text-green-500" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="font-medium">Adicionar Pessoa</span>
-              <span className="text-xs text-muted-foreground">Novo membro na galera</span>
-            </div>
-          </button>
         </div>
       </SheetContent>
     </Sheet>
