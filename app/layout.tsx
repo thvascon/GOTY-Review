@@ -18,7 +18,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Game Review Squad - Avalie jogos com seus amigos",
+  title: "CÓDEX - Avalie jogos com seus amigos",
   description: "Avalie e compartilhe suas opiniões sobre jogos com sua galera",
   keywords: ["games", "review", "avaliação", "jogos"],
 };

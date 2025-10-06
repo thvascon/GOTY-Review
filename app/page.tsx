@@ -512,7 +512,7 @@ export default function HomePage() {
       <Auth open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
       <div className="min-h-screen bg-black">
         {/* Header com fundo escuro */}
-        <div className="bg-black py-6 pt-1">
+        <div className="bg-black py-6 pt-1 pb-12 md:pb-6">
           <div className="w-full px-4">
             <Header
               onAddGame={handleAddGame}
@@ -580,7 +580,7 @@ export default function HomePage() {
             ) : (
               <div className="text-center py-24">
                 <h2 className="text-2xl font-bold mb-4">
-                  Bem-vindo ao Game Review da Galera!
+                  Bem-vindo ao CÓDEX da Galera!
                 </h2>
                 <p className="text-muted-foreground mb-6">
                   Faça login para ver, adicionar e avaliar jogos.

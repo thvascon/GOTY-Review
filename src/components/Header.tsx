@@ -72,25 +72,14 @@ export const Header = ({
         {/* Logo */}
         <div className="flex items-center flex-shrink-0">
           <h1 className="text-xl font-bold flex items-center gap-2">
-            {currentTheme === "light" ? (
-              <Image
-                src="/logo3.svg"
-                alt="GOTY Review Logo"
-                width={160}
-                height={160}
-                className="w-24 h-24 -ml-2"
-                priority
-              />
-            ) : (
-              <Image
-                src="/logo.svg"
-                alt="GOTY Review Logo"
-                width={160}
-                height={160}
-                className="w-24 h-24 -ml-2"
-                priority
-              />
-            )}
+            <Image
+              src="/logo.svg"
+              alt="GOTY Review Logo"
+              width={160}
+              height={160}
+              className="w-24 h-24 -ml-2"
+              priority
+            />
           </h1>
         </div>
 
@@ -137,12 +126,13 @@ export const Header = ({
           </Button>
 
           <InviteCodeButton />
-          <ModeToggle />
+          <ModeToggle className="text-white hover:text-white hover:bg-white/10" />
 
           <Button
             variant="ghost"
             size="icon"
             onClick={handleLogout}
+            className="text-white hover:text-white hover:bg-white/10"
           >
             <LogOut className="w-5 h-5" />
           </Button>
@@ -150,7 +140,7 @@ export const Header = ({
 
         {/* Controles Mobile */}
         <div className="flex items-center gap-2 md:hidden ml-auto">
-          <ModeToggle />
+          <ModeToggle className="text-white hover:text-white hover:bg-white/10" />
           <MobileMenu
             onAddGameClick={() => setIsAddGameOpen(true)}
             onAddPersonClick={() => setIsAddPersonOpen(true)}
@@ -158,7 +148,7 @@ export const Header = ({
         </div>
 
         {/* Barra de busca Mobile - Ocupa linha inteira */}
-        <div className="w-full md:hidden relative">
+        <div className="w-full md:hidden relative mt-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
