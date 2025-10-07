@@ -181,6 +181,7 @@ export default function HomePage() {
           section_id: gameData.sectionId || null,
           genres: gameData.genres || [],
           group_id: profile.group_id,
+          rawg_id: gameData.rawgId || null,
         },
       ])
       .select()

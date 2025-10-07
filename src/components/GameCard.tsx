@@ -11,9 +11,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { useGameTrailer } from "@/hooks/useGameTrailer";
 
 interface GameCardProps {
   id: string;
@@ -32,6 +33,7 @@ interface GameCardProps {
   className?: string;
   loggedInPlayerId?: string;
   index?: number;
+  rawgId?: number;
 }
 
 export const GameCard = ({
@@ -46,8 +48,25 @@ export const GameCard = ({
   className,
   loggedInPlayerId,
   index = 0,
+  rawgId,
 }: GameCardProps) => {
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
+  const [currentScreenshotIndex, setCurrentScreenshotIndex] = useState(0);
+  const { media } = useGameTrailer(rawgId || null, isHovering);
+
+  // Rotacionar screenshots
+  useEffect(() => {
+    if (media?.type === 'screenshots' && media.screenshots && isHovering) {
+      const interval = setInterval(() => {
+        setCurrentScreenshotIndex((prev) =>
+          (prev + 1) % (media.screenshots?.length || 1)
+        );
+      }, 800); // Troca a cada 800ms
+
+      return () => clearInterval(interval);
+    }
+  }, [media, isHovering]);
 
   const { loggedInRating, otherRatings } = useMemo(() => {
     const userRating = loggedInPlayerId
@@ -107,16 +126,61 @@ export const GameCard = ({
         </div>
       )}
 
-      <div className="relative w-full h-48 bg-muted">
-        <Image
-          src={coverImage || "/placeholder.svg"}
-          alt={`Capa de ${title}`}
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover object-top"
-          quality={85}
-          priority={index < 3}
-        />
+      <div
+        className="relative w-full h-48 bg-muted"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => {
+          setIsHovering(false);
+          setCurrentScreenshotIndex(0);
+        }}
+      >
+        {isHovering && media ? (
+          <>
+            {/* Vídeo direto da RAWG */}
+            {media.type === 'video' && media.url && (
+              <video
+                src={media.url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover object-top"
+              />
+            )}
+
+            {/* YouTube embed do IGDB */}
+            {media.type === 'youtube' && media.youtubeId && (
+              <iframe
+                src={`https://www.youtube.com/embed/${media.youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${media.youtubeId}`}
+                className="absolute inset-0 w-full h-full object-cover"
+                allow="autoplay; encrypted-media"
+                frameBorder="0"
+              />
+            )}
+
+            {/* Screenshots em rotação */}
+            {media.type === 'screenshots' && media.screenshots && (
+              <Image
+                src={media.screenshots[currentScreenshotIndex]}
+                alt={`Screenshot ${currentScreenshotIndex + 1} de ${title}`}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover object-top transition-opacity duration-300"
+                quality={85}
+              />
+            )}
+          </>
+        ) : (
+          <Image
+            src={coverImage || "/placeholder.svg"}
+            alt={`Capa de ${title}`}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover object-top"
+            quality={85}
+            priority={index < 3}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-3 left-3 right-3 z-10">
           <h3 className="text-white font-bold text-lg line-clamp-2 drop-shadow-lg">

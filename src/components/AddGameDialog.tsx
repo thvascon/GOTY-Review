@@ -52,6 +52,7 @@ interface AddGameDialogProps {
     coverImage?: string;
     sectionId: string;
     genres: string;
+    rawgId?: number;
   }) => void;
   trigger?: React.ReactNode;
   open?: boolean;
@@ -70,6 +71,7 @@ export const AddGameDialog = ({
     title: "",
     coverImage: "",
     sectionId: "",
+    rawgId: undefined as number | undefined,
   });
   const [newSectionName, setNewSectionName] = useState("");
   const [isCreatingSection, setIsCreatingSection] = useState(false);
@@ -151,6 +153,7 @@ export const AddGameDialog = ({
         ...formData,
         title: detailsData.name,
         coverImage: detailsData.background_image,
+        rawgId: game.id,
       });
       setSearchResults([]);
     } catch (error) {
@@ -159,6 +162,7 @@ export const AddGameDialog = ({
         ...formData,
         title: game.name,
         coverImage: game.background_image,
+        rawgId: game.id,
       });
       setSelectedGameGenres([]);
       setSearchResults([]);
@@ -229,13 +233,14 @@ export const AddGameDialog = ({
         coverImage: formData.coverImage.trim() || undefined,
         sectionId: formData.sectionId,
         genres: selectedGameGenres as any,
+        rawgId: formData.rawgId,
       });
       toast({
         title: "Jogo adicionado!",
         description: `"${formData.title}" foi adicionado à lista de jogos.`,
         duration: 3000,
       });
-      setFormData({ title: "", coverImage: "", sectionId: "" });
+      setFormData({ title: "", coverImage: "", sectionId: "", rawgId: undefined });
       setSelectedGameGenres([]);
       setErrors({});
       setOpen(false);

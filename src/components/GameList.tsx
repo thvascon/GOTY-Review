@@ -15,6 +15,7 @@ export type Game = {
   averageRating: number;
   sectionId?: string;
   genres?: string[];
+  rawgId?: number;
 };
 
 interface GameListProps {
@@ -83,6 +84,7 @@ export function GameList({
               onClick={() => onCardClick(game)}
               loggedInPlayerId={loggedInPlayerId}
               index={index}
+              rawgId={game.rawgId}
             />
           </div>
         ))}

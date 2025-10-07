@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AddGameDialog } from "./AddGameDialog";
 import { MobileMenu } from "./MobileMenu";
 import { cn } from "@/lib/utils";
-import { LogOut, Activity, Search } from "lucide-react";
+import { LogOut, Activity, Search, Video } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import { Plus } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
 import { InviteCodeButton } from "@/components/InviteCodeButton";
 import { useTheme } from "@/components/ThemeProvider";
+import { updateGamesWithRawgId } from "@/utils/updateGamesWithRawgId";
+import { useToast } from "@/hooks/use-toast";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -37,8 +39,10 @@ export const Header = ({
 }: HeaderProps) => {
   const { profile } = useAuth();
   const { theme, resolvedTheme } = useTheme();
+  const { toast } = useToast();
   const [isAddGameOpen, setIsAddGameOpen] = useState(false);
   const [isAddPersonOpen, setIsAddPersonOpen] = useState(false);
+  const [isUpdatingRawgIds, setIsUpdatingRawgIds] = useState(false);
 
   const currentTheme = (theme === 'system' ? resolvedTheme : theme) || 'light';
 
@@ -58,6 +62,44 @@ export const Header = ({
       console.error("Erro ao fazer logout:", error);
       // Mesmo com erro, tenta limpar e recarregar
       window.location.reload();
+    }
+  };
+
+  const handleUpdateRawgIds = async () => {
+    if (!profile?.group_id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar em um grupo",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUpdatingRawgIds(true);
+    toast({
+      title: "Atualizando...",
+      description: "Buscando trailers para os jogos. Isso pode levar alguns minutos.",
+    });
+
+    try {
+      const result = await updateGamesWithRawgId(profile.group_id);
+
+      if (result.success) {
+        toast({
+          title: "Atualização concluída!",
+          description: `${result.updated} jogos atualizados com sucesso.`,
+        });
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar rawgIds:", error);
+      toast({
+        title: "Erro",
+        description: "Falha ao atualizar jogos. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingRawgIds(false);
     }
   };
 
@@ -106,6 +148,16 @@ export const Header = ({
           >
             <Plus className="w-4 h-4 mr-2" />
             Adicionar
+          </Button>
+
+          <Button
+            onClick={handleUpdateRawgIds}
+            variant="outline"
+            size="icon"
+            disabled={isUpdatingRawgIds}
+            title="Adicionar trailers aos jogos"
+          >
+            <Video className="w-4 h-4" />
           </Button>
 
           <Button asChild variant="outline" size="icon">
