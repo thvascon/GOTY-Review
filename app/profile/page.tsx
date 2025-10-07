@@ -26,6 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ImageCropper } from "@/components/ImageCropper";
 
 interface UserReview {
   created_at: string;
@@ -73,6 +74,8 @@ function ProfilePageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isCropperOpen, setIsCropperOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
@@ -166,26 +169,38 @@ function ProfilePageContent() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Erro",
-        description: "A imagem deve ter no máximo 2MB.",
+        description: "A imagem deve ter no máximo 5MB.",
         variant: "destructive",
       });
       return;
     }
 
+    // Criar preview da imagem para o cropper
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImageToCrop(reader.result as string);
+      setIsCropperOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = async (croppedImageBlob: Blob) => {
+    if (!loggedInProfile) return;
+
     setUploadingImage(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${loggedInProfile.id}/${Date.now()}.${fileExt}`;
+      const fileName = `${loggedInProfile.id}/${Date.now()}.jpg`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(fileName, file, {
+        .upload(fileName, croppedImageBlob, {
           cacheControl: "3600",
           upsert: false,
+          contentType: 'image/jpeg',
         });
 
       if (uploadError) throw uploadError;
@@ -533,6 +548,17 @@ function ProfilePageContent() {
           </div>
         )}
       </div>
+
+      {/* Image Cropper Modal */}
+      {imageToCrop && (
+        <ImageCropper
+          image={imageToCrop}
+          open={isCropperOpen}
+          onOpenChange={setIsCropperOpen}
+          onCropComplete={handleCropComplete}
+          aspectRatio={1}
+        />
+      )}
     </div>
   );
 }
