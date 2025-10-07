@@ -158,6 +158,32 @@
   .star-good { color: hsl(var(--rating-good)); }
   .star-poor { color: hsl(var(--rating-poor)); }
   .star-unplayed { color: hsl(var(--rating-unplayed)); }
+
+  /* Remove any transform effects on star buttons */
+  .star-button {
+    transform: none !important;
+    translate: none !important;
+    scale: 1 !important;
+    position: relative !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    vertical-align: middle !important;
+  }
+  .star-button:hover {
+    transform: none !important;
+    translate: none !important;
+    scale: 1 !important;
+    position: relative !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    vertical-align: middle !important;
+  }
+  .star-button * {
+    transform: none !important;
+    translate: none !important;
+    scale: 1 !important;
+    vertical-align: middle !important;
+  }
 }
 
 @layer utilities {

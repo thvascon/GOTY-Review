@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,28 @@ export const StarRating = ({
   className,
 }: StarRatingProps) => {
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Reset hover quando o mouse sai da área das estrelas
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current || disabled) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const isOutside =
+        e.clientX < rect.left ||
+        e.clientX > rect.right ||
+        e.clientY < rect.top ||
+        e.clientY > rect.bottom;
+
+      if (isOutside && hoveredRating !== null) {
+        setHoveredRating(null);
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
+  }, [hoveredRating, disabled]);
 
   const getRatingColor = (currentRating: number) => {
     if (currentRating === 0) return "star-unplayed";
@@ -68,12 +90,28 @@ export const StarRating = ({
   };
 
   return (
-    <div className={cn("flex items-center justify-between w-full", className)}>
-      <div className="flex items-center gap-0.5 flex-shrink-0">
+    <div
+      ref={containerRef}
+      className={cn("flex items-center justify-between w-full", className)}
+      onMouseLeave={() => !disabled && setHoveredRating(null)}
+    >
+      <div
+        className="flex items-center gap-0.5 flex-shrink-0"
+      >
         {Array.from({ length: maxRating }, (_, index) => {
           const starPosition = index + 1;
-          const isFull = starPosition <= displayRating;
-          const isHalf = !isFull && (starPosition - 0.5) <= displayRating && displayRating < starPosition;
+
+          // Calcula o estado visual baseado no rating atual (rating real, não hover)
+          const actualIsFull = starPosition <= rating;
+          const actualIsHalf = !actualIsFull && (starPosition - 0.5) <= rating && rating < starPosition;
+
+          // Calcula o estado de hover
+          const hoverIsFull = hoveredRating !== null && starPosition <= hoveredRating;
+          const hoverIsHalf = hoveredRating !== null && !hoverIsFull && (starPosition - 0.5) <= hoveredRating && hoveredRating < starPosition;
+
+          // Usa hover se estiver hovereando, senão usa o rating real
+          const isFull = hoveredRating !== null ? hoverIsFull : actualIsFull;
+          const isHalf = hoveredRating !== null ? hoverIsHalf : actualIsHalf;
 
           return (
             <button
@@ -81,8 +119,7 @@ export const StarRating = ({
               type="button"
               disabled={disabled}
               className={cn(
-                "transition-all duration-200 relative",
-                !disabled && "hover:scale-110",
+                "star-button transition-colors duration-200 relative",
                 disabled && "cursor-not-allowed",
                 colorClass
               )}
@@ -95,15 +132,17 @@ export const StarRating = ({
               onClick={(e) => handleStarClick(e, index)}
             >
               {isHalf ? (
-                <div className="relative inline-block">
+                <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size, transform: 'none', verticalAlign: 'middle' }}>
                   <Star
                     size={size}
-                    className="fill-transparent stroke-current opacity-60"
+                    className="fill-transparent stroke-current opacity-60 absolute"
+                    style={{ top: 0, left: 0, transform: 'none' }}
                   />
-                  <div className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%' }}>
+                  <div className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%', height: '100%', transform: 'none' }}>
                     <Star
                       size={size}
                       className="fill-current"
+                      style={{ transform: 'none' }}
                     />
                   </div>
                 </div>
@@ -111,11 +150,12 @@ export const StarRating = ({
                 <Star
                   size={size}
                   className={cn(
-                    "transition-all duration-200",
+                    "transition-colors duration-200",
                     isFull
                       ? "fill-current"
                       : "fill-transparent stroke-current opacity-60"
                   )}
+                  style={{ transform: 'none', verticalAlign: 'middle' }}
                 />
               )}
             </button>
