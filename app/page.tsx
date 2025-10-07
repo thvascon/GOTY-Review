@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Gamepad2, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
 import { AddGameDialog } from "@/components/AddGameDialog";
@@ -67,11 +67,14 @@ export default function HomePage() {
     useState<GameWithDetails | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const hasInitializedAccordion = useRef(false);
 
   useEffect(() => {
-    if (sections.length > 0 && !openAccordion) {
+    // Só abrir automaticamente na primeira vez
+    if (sections.length > 0 && !openAccordion && !hasInitializedAccordion.current) {
       const geralSection = sections.find((s) => s.title === "Gerais");
       setOpenAccordion(geralSection ? geralSection.id : sections[0].id);
+      hasInitializedAccordion.current = true;
     }
   }, [sections, openAccordion]);
 
