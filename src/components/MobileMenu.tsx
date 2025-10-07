@@ -34,7 +34,7 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
       <SheetContent side="right" className="w-72">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Gamepad2 className="w-5 h-5 text-purple-500" />
+            <Gamepad2 className="w-5 h-5 text-primary" />
             Menu
           </SheetTitle>
         </SheetHeader>
@@ -66,8 +66,8 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
             onClick={() => handleMenuItemClick()}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
           >
-            <div className="w-10 h-10 rounded-full bg-purple-500/10 flex items-center justify-center">
-              <Activity className="w-5 h-5 text-purple-500" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Activity className="w-5 h-5 text-primary" />
             </div>
             <div className="flex flex-col items-start">
               <span className="font-medium">Feed de Atividades</span>
@@ -82,8 +82,8 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
             onClick={() => handleMenuItemClick(onAddGameClick)}
             className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full text-left"
           >
-            <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
-              <Gamepad2 className="w-5 h-5 text-blue-500" />
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Gamepad2 className="w-5 h-5 text-primary" />
             </div>
             <div className="flex flex-col items-start">
               <span className="font-medium">Adicionar Jogo</span>
