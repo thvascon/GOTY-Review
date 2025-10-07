@@ -68,16 +68,22 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
 
   console.log("GameDataProvider renderizou - cache:", cachedData.isFetched, "games:", games.length, "loading:", loading);
 
-  const fetchData = async () => {
+  const fetchData = async (forceRefetch = false) => {
     if (!session || !profile || profile.name === session.user.email || !profile.group_id) {
       setLoading(false);
       return;
     }
 
-    // Se já tem dados no cache global, não buscar e garantir que loading seja false
-    if (cachedData.isFetched || isFetchingRef.current) {
+    // Se já tem dados no cache global e não é um refetch forçado, não buscar
+    if (cachedData.isFetched && !forceRefetch) {
       console.log("Dados já em cache, não buscando novamente");
       if (loading) setLoading(false);
+      return;
+    }
+
+    // Evitar fetch duplicado simultâneo
+    if (isFetchingRef.current) {
+      console.log("Fetch já em andamento, ignorando...");
       return;
     }
 
@@ -111,6 +117,7 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
         coverImage: g.cover_image || "/placeholder.svg",
         sectionId: g.section_id,
         genres: g.genres || [],
+        rawgId: g.rawg_id,
       }));
       const ratingsData = (reviewsRes.data || []).map((r: any) => ({
         gameId: r.game_id,
@@ -147,26 +154,29 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
 
     const channel = supabase
       .channel("game-data-changes")
-      .on("postgres_changes", { 
-        event: "*", 
+      .on("postgres_changes", {
+        event: "*",
         schema: "public",
         table: "reviews"
       }, () => {
-        fetchData();
+        console.log("Mudança detectada em reviews, atualizando...");
+        fetchData(true); // Força refetch
       })
-      .on("postgres_changes", { 
-        event: "*", 
+      .on("postgres_changes", {
+        event: "*",
         schema: "public",
         table: "games"
       }, () => {
-        fetchData();
+        console.log("Mudança detectada em games, atualizando...");
+        fetchData(true); // Força refetch
       })
-      .on("postgres_changes", { 
-        event: "*", 
+      .on("postgres_changes", {
+        event: "*",
         schema: "public",
         table: "people"
       }, () => {
-        fetchData();
+        console.log("Mudança detectada em people, atualizando...");
+        fetchData(true); // Força refetch
       })
       .subscribe();
 
@@ -176,13 +186,13 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
   }, [session, profile]);
 
   return (
-    <GameDataContext.Provider value={{ 
-      players, 
-      games, 
-      ratings, 
-      sections, 
+    <GameDataContext.Provider value={{
+      players,
+      games,
+      ratings,
+      sections,
       loading,
-      refetch: fetchData 
+      refetch: () => fetchData(true) // Sempre força refetch quando chamado manualmente
     }}>
       {children}
     </GameDataContext.Provider>
