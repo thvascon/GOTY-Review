@@ -1,4 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+"use client";
+
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 
@@ -39,32 +41,58 @@ interface GameDataContextType {
 
 const GameDataContext = createContext<GameDataContextType | undefined>(undefined);
 
+// Cache global fora do componente para sobreviver a remontagens
+let cachedData: {
+  players: Player[];
+  games: Game[];
+  ratings: Rating[];
+  sections: Section[];
+  isFetched: boolean;
+} = {
+  players: [],
+  games: [],
+  ratings: [],
+  sections: [],
+  isFetched: false,
+};
+
 export const GameDataProvider = ({ children }: { children: ReactNode }) => {
   const { session, profile } = useAuth();
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
-  const [ratings, setRatings] = useState<Rating[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isFetched, setIsFetched] = useState(false);
+  const [players, setPlayers] = useState<Player[]>(cachedData.players);
+  const [games, setGames] = useState<Game[]>(cachedData.games);
+  const [ratings, setRatings] = useState<Rating[]>(cachedData.ratings);
+  const [sections, setSections] = useState<Section[]>(cachedData.sections);
+  // Só loading se não tem cache E não tem dados
+  const [loading, setLoading] = useState(!cachedData.isFetched && cachedData.games.length === 0);
+  const isFetchingRef = useRef(false);
+
+  console.log("GameDataProvider renderizou - cache:", cachedData.isFetched, "games:", games.length, "loading:", loading);
 
   const fetchData = async () => {
-    if (!session || !profile || profile.name === session.user.email) {
+    if (!session || !profile || profile.name === session.user.email || !profile.group_id) {
       setLoading(false);
       return;
     }
 
-    if (isFetched) {
-      setLoading(false);
-    } else {
+    // Se já tem dados no cache global, não buscar e garantir que loading seja false
+    if (cachedData.isFetched || isFetchingRef.current) {
+      console.log("Dados já em cache, não buscando novamente");
+      if (loading) setLoading(false);
+      return;
+    }
+
+    console.log("Buscando dados do servidor...");
+    isFetchingRef.current = true;
+    // Só mostrar loading se não tiver nenhum dado ainda
+    if (cachedData.games.length === 0) {
       setLoading(true);
     }
 
     try {
       const [peopleRes, sectionsRes, gamesRes, reviewsRes] = await Promise.all([
-        supabase.from("people").select("id, name, avatar_url"),
-        supabase.from("sections").select("*"),
-        supabase.from("games").select("*"),
+        supabase.from("people").select("id, name, avatar_url").eq("group_id", profile.group_id),
+        supabase.from("sections").select("*").eq("group_id", profile.group_id),
+        supabase.from("games").select("*").eq("group_id", profile.group_id),
         supabase.from("reviews").select("*"),
       ]);
 
@@ -75,30 +103,41 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      setPlayers(peopleRes.data || []);
-      setSections(sectionsRes.data || []);
-      setGames(
-        (gamesRes.data || []).map((g: any) => ({
-          id: g.id,
-          title: g.name,
-          coverImage: g.cover_image || "/placeholder.svg",
-          sectionId: g.section_id,
-          genres: g.genres || [],
-        }))
-      );
-      setRatings(
-        (reviewsRes.data || []).map((r: any) => ({
-          gameId: r.game_id,
-          playerId: r.person_id,
-          rating: r.rating,
-          comment: r.comment,
-        }))
-      );
+      const playersData = peopleRes.data || [];
+      const sectionsData = sectionsRes.data || [];
+      const gamesData = (gamesRes.data || []).map((g: any) => ({
+        id: g.id,
+        title: g.name,
+        coverImage: g.cover_image || "/placeholder.svg",
+        sectionId: g.section_id,
+        genres: g.genres || [],
+      }));
+      const ratingsData = (reviewsRes.data || []).map((r: any) => ({
+        gameId: r.game_id,
+        playerId: r.person_id,
+        rating: r.rating,
+        comment: r.comment,
+      }));
 
-      setIsFetched(true);
+      // Atualizar cache global
+      cachedData = {
+        players: playersData,
+        games: gamesData,
+        ratings: ratingsData,
+        sections: sectionsData,
+        isFetched: true,
+      };
+
+      setPlayers(playersData);
+      setSections(sectionsData);
+      setGames(gamesData);
+      setRatings(ratingsData);
+
+      console.log("Dados carregados com sucesso e salvos no cache!");
     } catch (error) {
       console.error("Erro geral no fetchData:", error);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
   };

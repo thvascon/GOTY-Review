@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Gamepad2, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
-import { GameCard } from "@/components/GameCard";
 import { AddGameDialog } from "@/components/AddGameDialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -18,6 +17,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useAuth } from "@/components/AuthProvider";
+import { useGameData } from "@/components/GameDataProvider";
 import { Auth } from "@/components/Auth";
 import { GameList } from "@/components/GameList";
 import { GroupSelector } from "@/components/GroupSelector";
@@ -59,12 +59,9 @@ interface GameWithDetails extends Game {
 
 export default function HomePage() {
   const { session, profile, loading } = useAuth();
+  const { players, games, ratings, sections, loading: dataLoading, refetch } = useGameData();
   const { toast } = useToast();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
-  const [ratings, setRatings] = useState<Rating[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedGameDetails, setSelectedGameDetails] =
     useState<GameWithDetails | null>(null);
@@ -72,96 +69,11 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (session && profile && profile.name !== session.user.email && profile.group_id) {
-      const fetchData = async () => {
-      try {
-        console.log("Buscando todos os dados do grupo...");
-
-        const peopleRes = await supabase
-          .from("people")
-          .select("id, name, avatar_url")
-          .eq("group_id", profile.group_id!);
-
-        const sectionsRes = await supabase
-          .from("sections")
-          .select("*")
-          .eq("group_id", profile.group_id!);
-
-        const gamesRes = await supabase
-          .from("games")
-          .select("*")
-          .eq("group_id", profile.group_id!);
-
-        const reviewsRes = await supabase
-          .from("reviews")
-          .select("*");
-
-        if (
-          peopleRes.error ||
-          sectionsRes.error ||
-          gamesRes.error ||
-          reviewsRes.error
-        ) {
-          console.error(
-            "Erro ao buscar dados:",
-            peopleRes.error ||
-              sectionsRes.error ||
-              gamesRes.error ||
-              reviewsRes.error
-          );
-          return;
-        }
-
-        setPlayers(peopleRes.data || []);
-        setSections(sectionsRes.data || []);
-
-        const sectionsData = sectionsRes.data || [];
-        if (sectionsData.length > 0 && !openAccordion) {
-          const geralSection = sectionsData.find((s) => s.title === "Gerais");
-          setOpenAccordion(geralSection ? geralSection.id : sectionsData[0].id);
-        }
-
-        setGames(
-          (gamesRes.data || []).map((g: any) => ({
-            id: g.id,
-            title: g.name,
-            coverImage: g.cover_image || "/placeholder.svg",
-            sectionId: g.section_id,
-            genres: g.genres || [],
-          }))
-        );
-        setRatings(
-          (reviewsRes.data || []).map((r: any) => ({
-            gameId: r.game_id,
-            playerId: r.person_id,
-            rating: r.rating,
-            comment: r.comment,
-          }))
-        );
-      } catch (error) {
-        console.error("Erro geral no fetchData:", error);
-      }
-    };
-
-    fetchData();
-
-    const channel = supabase
-      .channel("public-tables")
-      .on("postgres_changes", { event: "*", schema: "public" }, (payload) => {
-        console.log(
-          "Mudança no banco detectada, buscando dados novamente...",
-          payload
-        );
-        fetchData();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    if (sections.length > 0 && !openAccordion) {
+      const geralSection = sections.find((s) => s.title === "Gerais");
+      setOpenAccordion(geralSection ? geralSection.id : sections[0].id);
     }
-
-  }, [session, profile]);
+  }, [sections, openAccordion]);
 
   useEffect(() => {
     if (session && isAuthModalOpen) {
@@ -211,15 +123,7 @@ export default function HomePage() {
         .insert([{ game_id: gameId, person_id: playerId, rating: newRating }]);
     }
 
-    const { data: ratingsData } = await supabase.from("reviews").select("*");
-    setRatings(
-      (ratingsData || []).map((r: any) => ({
-        gameId: r.game_id,
-        playerId: r.person_id,
-        rating: r.rating,
-        comment: r.comment,
-      }))
-    );
+    await refetch();
 
     if (isModalOpen && selectedGameDetails) {
       const updatedRatings = getGameRatings(selectedGameDetails.id);
@@ -289,17 +193,6 @@ export default function HomePage() {
     }
 
     if (data) {
-      setGames((prev) => [
-        ...prev,
-        {
-          id: data.id,
-          title: data.name,
-          coverImage: (data as any).cover_image || "/placeholder.svg",
-          sectionId: data.section_id,
-          genres: (data as any).genres || [],
-        },
-      ]);
-
       if (players.length > 0) {
         const ratingsToInsert = players.map((player) => ({
           game_id: data.id,
@@ -307,18 +200,8 @@ export default function HomePage() {
           rating: 0,
         }));
         await supabase.from("reviews").insert(ratingsToInsert);
-        const { data: ratingsData } = await supabase
-          .from("reviews")
-          .select("*");
-        setRatings(
-          (ratingsData || []).map((r: any) => ({
-            gameId: r.game_id,
-            playerId: r.person_id,
-            rating: r.rating,
-            comment: r.comment,
-          }))
-        );
       }
+      await refetch();
     }
   };
 
@@ -339,8 +222,6 @@ export default function HomePage() {
     }
 
     if (data) {
-      setPlayers((prev) => [...prev, { id: data.id, name: data.name }]);
-
       const validGames = games.filter((game) => !!game.id);
       if (validGames.length > 0) {
         const ratingsToInsert = validGames.map((game) => ({
@@ -349,18 +230,8 @@ export default function HomePage() {
           rating: 0,
         }));
         await supabase.from("reviews").insert(ratingsToInsert);
-        const { data: ratingsData } = await supabase
-          .from("reviews")
-          .select("*");
-        setRatings(
-          (ratingsData || []).map((r: any) => ({
-            gameId: r.game_id,
-            playerId: r.person_id,
-            rating: r.rating,
-            comment: r.comment,
-          }))
-        );
       }
+      await refetch();
     }
   };
 
@@ -386,7 +257,7 @@ export default function HomePage() {
         variant: "destructive",
       });
     } else {
-      setGames((prevGames) => prevGames.filter((game) => game.id !== gameId));
+      await refetch();
       toast({
         title: "Jogo removido!",
         description: `"${gameToRemove.title}" foi removido com sucesso.`,
@@ -441,7 +312,7 @@ export default function HomePage() {
     );
   };
 
-  if (loading) {
+  if (loading || (dataLoading && games.length === 0)) {
     return (
       <div className="min-h-screen bg-black">
         <div className="bg-black py-6 pt-1">
@@ -503,9 +374,6 @@ export default function HomePage() {
       </div>
     );
   }
-
-  console.log("Seções carregadas:", sections);
-  console.log("Jogos carregados:", games);
 
   return (
     <>

@@ -74,12 +74,9 @@ export const GameCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
       transition={{
-        duration: 0.3,
-        ease: [0.4, 0, 0.2, 1],
+        duration: 0.2,
       }}
       className={cn(
         "bg-gradient-to-br from-card to-card/80 rounded-xl shadow-lg overflow-hidden flex flex-col cursor-pointer relative z-0 group",
