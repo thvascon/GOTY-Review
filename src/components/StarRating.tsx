@@ -131,33 +131,35 @@ export const StarRating = ({
               }
               onClick={(e) => handleStarClick(e, index)}
             >
-              {isHalf ? (
-                <div className="relative inline-flex items-center justify-center" style={{ width: size, height: size, transform: 'none', verticalAlign: 'middle' }}>
-                  <Star
-                    size={size}
-                    className="fill-transparent stroke-current opacity-60 absolute"
-                    style={{ top: 0, left: 0, transform: 'none' }}
-                  />
-                  <div className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%', height: '100%', transform: 'none' }}>
+              <span className="relative inline-block" style={{ width: size, height: size, display: 'inline-block', verticalAlign: 'middle' }}>
+                {isHalf ? (
+                  <>
                     <Star
                       size={size}
-                      className="fill-current"
-                      style={{ transform: 'none' }}
+                      className="fill-transparent stroke-current opacity-60 absolute"
+                      style={{ top: 0, left: 0, transform: 'none' }}
                     />
-                  </div>
-                </div>
-              ) : (
-                <Star
-                  size={size}
-                  className={cn(
-                    "transition-colors duration-200",
-                    isFull
-                      ? "fill-current"
-                      : "fill-transparent stroke-current opacity-60"
-                  )}
-                  style={{ transform: 'none', verticalAlign: 'middle' }}
-                />
-              )}
+                    <span className="absolute top-0 left-0 overflow-hidden" style={{ width: '50%', height: '100%', display: 'block' }}>
+                      <Star
+                        size={size}
+                        className="fill-current"
+                        style={{ transform: 'none' }}
+                      />
+                    </span>
+                  </>
+                ) : (
+                  <Star
+                    size={size}
+                    className={cn(
+                      "transition-colors duration-200",
+                      isFull
+                        ? "fill-current"
+                        : "fill-transparent stroke-current opacity-60"
+                    )}
+                    style={{ transform: 'none', position: 'absolute', top: 0, left: 0 }}
+                  />
+                )}
+              </span>
             </button>
           );
         })}

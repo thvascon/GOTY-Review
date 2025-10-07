@@ -76,13 +76,14 @@ export const GameCard = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
       transition={{
         duration: 0.3,
         ease: [0.4, 0, 0.2, 1],
       }}
       className={cn(
         "bg-gradient-to-br from-card to-card/80 rounded-xl shadow-lg overflow-hidden flex flex-col cursor-pointer relative z-0 group",
-        "hover:shadow-[0_8px_40px_rgba(156,163,175,0.1)]", // <-- Linha modificada
+        "hover:shadow-[0_8px_40px_rgba(156,163,175,0.1)]",
         className
       )}
       onClick={onClick}
