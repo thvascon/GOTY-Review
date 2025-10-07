@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ImageCropper } from "@/components/ImageCropper";
+import { ProfileStats } from "@/components/ProfileStats";
 
 interface UserReview {
   created_at: string;
@@ -461,6 +462,13 @@ function ProfilePageContent() {
       )}
 
       <div className="container mx-auto max-w-6xl px-4 md:px-6 lg:px-8 py-6 md:py-8">
+        {/* Estatísticas */}
+        {isOwnProfile && reviews.length > 0 && (
+          <div className="mb-8">
+            <ProfileStats reviews={reviews} />
+          </div>
+        )}
+
         <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
           Jogos Avaliados ({stats.total})
         </h2>

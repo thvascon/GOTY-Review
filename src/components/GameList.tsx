@@ -1,11 +1,3 @@
-import { useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { GameCard } from "@/components/GameCard";
 
 export type Game = {
@@ -43,35 +35,10 @@ export function GameList({
   onRemoveGame,
   getGameRatings,
 }: GameListProps) {
-  const [sortBy, setSortBy] = useState<"alphabetical" | "rating">(
-    "alphabetical"
-  );
-
-  const sortedGames = [...games].sort((a, b) => {
-    if (sortBy === "alphabetical") return a.title.localeCompare(b.title);
-    if (sortBy === "rating") return b.averageRating - a.averageRating;
-    return 0;
-  });
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Select
-          value={sortBy}
-          onValueChange={(val) => setSortBy(val as "alphabetical" | "rating")}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Ordenar por..." />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="alphabetical">Ordem alfabética</SelectItem>
-            <SelectItem value="rating">Média de nota</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 items-stretch">
-        {sortedGames.map((game, index) => (
+        {games.map((game, index) => (
           <div key={game.id} className="h-full">
             <GameCard
               id={game.id}

@@ -21,6 +21,19 @@ export const metadata: Metadata = {
   title: "CÓDEX - Avalie jogos com seus amigos",
   description: "Avalie e compartilhe suas opiniões sobre jogos com sua galera",
   keywords: ["games", "review", "avaliação", "jogos"],
+  manifest: "/manifest.json",
+  themeColor: "#22c55e",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "CÓDEX",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 };
 
 export default function RootLayout({

@@ -23,6 +23,7 @@ interface Rating {
   playerId: string;
   rating: number;
   comment?: string;
+  status?: string | null;
 }
 
 interface Section {
@@ -124,6 +125,7 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
         playerId: r.person_id,
         rating: r.rating,
         comment: r.comment,
+        status: r.status,
       }));
 
       // Atualizar cache global

@@ -21,6 +21,8 @@ import { useGameData } from "@/components/GameDataProvider";
 import { Auth } from "@/components/Auth";
 import { GameList } from "@/components/GameList";
 import { GroupSelector } from "@/components/GroupSelector";
+import { TopGames } from "@/components/TopGames";
+import { AdvancedSearch, type SearchFilters } from "@/components/AdvancedSearch";
 
 interface Player {
   id: string;
@@ -41,6 +43,7 @@ interface Rating {
   playerId: string;
   rating: number;
   comment?: string;
+  status?: string | null;
 }
 
 interface Section {
@@ -67,6 +70,12 @@ export default function HomePage() {
     useState<GameWithDetails | null>(null);
   const [openAccordion, setOpenAccordion] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchFilters, setSearchFilters] = useState({
+    minRating: 0,
+    maxRating: 5,
+    genres: [] as string[],
+    status: [] as string[],
+  });
   const hasInitializedAccordion = useRef(false);
 
   useEffect(() => {
@@ -158,6 +167,7 @@ export default function HomePage() {
   };
 
   const handleAddGame = async (gameData: {
+    rawgId: null;
     title: string;
     coverImage?: string;
     sectionId?: string;
@@ -280,6 +290,7 @@ export default function HomePage() {
         playerAvatar: player.avatar_url || null,
         rating: rating?.rating || 0,
         comment: rating?.comment || "",
+        status: rating?.status || null,
       };
     });
   };
@@ -293,6 +304,21 @@ export default function HomePage() {
     return sum / validRatings.length;
   };
 
+  // Extrair todos os gêneros únicos
+  const availableGenres = Array.from(
+    new Set(games.flatMap((game) => game.genres || []))
+  ).sort();
+
+  const handleFiltersChange = (filters: SearchFilters) => {
+    setSearchTerm(filters.searchTerm);
+    setSearchFilters({
+      minRating: filters.minRating,
+      maxRating: filters.maxRating,
+      genres: filters.genres,
+      status: filters.status,
+    });
+  };
+
   const renderGameCardsForSection = (sectionId: string) => {
     const sectionGames = games
       .filter((game) => game.sectionId === sectionId)
@@ -302,7 +328,36 @@ export default function HomePage() {
       .map((game) => ({
         ...game,
         averageRating: getAverageRating(game.id),
-      }));
+      }))
+      .filter((game) => {
+        // Filtrar por nota
+        if (game.averageRating < searchFilters.minRating || game.averageRating > searchFilters.maxRating) {
+          return false;
+        }
+
+        // Filtrar por gênero
+        if (searchFilters.genres.length > 0) {
+          const gameGenres = game.genres || [];
+          const hasMatchingGenre = searchFilters.genres.some(genre =>
+            gameGenres.includes(genre)
+          );
+          if (!hasMatchingGenre) return false;
+        }
+
+        // Filtrar por status (do usuário logado)
+        if (searchFilters.status.length > 0 && profile) {
+          const userRating = ratings.find(
+            (r) => r.gameId === game.id && r.playerId === profile.id
+          );
+          const userStatus = userRating?.status;
+
+          if (!userStatus || !searchFilters.status.includes(userStatus)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
 
     return (
       <GameList
@@ -402,6 +457,16 @@ export default function HomePage() {
           <main className="bg-background rounded-2xl shadow-xl border border-border/50 px-4 pt-4 min-h-screen">
             {session ? (
               <>
+                {/* Busca Avançada */}
+                {games.length > 0 && (
+                  <div className="mb-6">
+                    <AdvancedSearch
+                      onFiltersChange={handleFiltersChange}
+                      availableGenres={availableGenres}
+                    />
+                  </div>
+                )}
+
                 <Accordion
                   type="single"
                   collapsible
@@ -409,6 +474,26 @@ export default function HomePage() {
                   value={openAccordion}
                   onValueChange={setOpenAccordion}
                 >
+                  {/* Top 10 como Accordion Item */}
+                  {games.length > 0 && ratings.length > 0 && (
+                    <AccordionItem value="top10" className="border-b-0 overflow-visible relative">
+                      <AccordionTrigger className="text-2xl font-bold hover:no-underline">
+                        🏆 Top 10 da Galera
+                      </AccordionTrigger>
+                      <AccordionContent className="overflow-visible relative">
+                        <TopGames
+                          games={games}
+                          ratings={ratings}
+                          limit={10}
+                          onGameClick={(gameId) => {
+                            const game = games.find(g => g.id === gameId);
+                            if (game) handleCardClick(game);
+                          }}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+                  )}
+
                   {sections.map((section) => (
                     <AccordionItem
                       key={section.id}

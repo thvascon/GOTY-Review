@@ -15,6 +15,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { useGameTrailer } from "@/hooks/useGameTrailer";
+import { GameStatusBadge, type GameStatus } from "./GameStatusSelector";
 
 interface GameCardProps {
   id: string;
@@ -26,6 +27,7 @@ interface GameCardProps {
     rating: number;
     playerName: string;
     playerAvatar?: string | null;
+    status?: string | null;
   }[];
   onRatingChange: (gameId: string, playerId: string, rating: number) => void;
   onRemoveGame?: (gameId: string) => void;
@@ -186,6 +188,11 @@ export const GameCard = ({
           <h3 className="text-white font-bold text-lg line-clamp-2 drop-shadow-lg">
             {title}
           </h3>
+          {loggedInRating?.status && (
+            <div className="mt-2">
+              <GameStatusBadge status={loggedInRating.status as GameStatus} />
+            </div>
+          )}
         </div>
       </div>
 

@@ -16,6 +16,7 @@ import { Plus } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
 import { InviteCodeButton } from "@/components/InviteCodeButton";
 import { useTheme } from "@/components/ThemeProvider";
+import { PlayerLevelBadge } from "@/components/PlayerLevel";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -99,6 +100,12 @@ export const Header = ({
 
         {/* Botões Desktop - Direita */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0 ml-auto">
+          {profile?.xp !== undefined && profile?.level !== undefined && (
+            <div className="mr-1">
+              <PlayerLevelBadge xp={profile.xp} level={profile.level} size="sm" />
+            </div>
+          )}
+
           <Button
             onClick={() => setIsAddGameOpen(true)}
             className="btn-glow"
