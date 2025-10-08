@@ -98,7 +98,7 @@ export const GameDetailsModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 flex flex-col" hideDefaultClose>
         {/* Header com imagem de fundo */}
-        <div className="relative h-64 bg-gradient-to-b from-black/60 to-background">
+        <div className="relative h-auto md:h-64 bg-gradient-to-b from-black/60 to-background">
           <div className="absolute inset-0 overflow-hidden">
             <Image
               src={game.coverImage}
@@ -113,38 +113,38 @@ export const GameDetailsModal = ({
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white"
+            className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-black/50 hover:bg-black/70 text-white"
           >
             <X className="w-5 h-5" />
           </Button>
 
-          <div className="relative h-full flex items-end p-6">
-            <div className="flex gap-6 items-end w-full">
+          <div className="relative h-full flex items-end p-3 md:p-6">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-end w-full">
               {/* Capa do jogo */}
-              <div className="relative w-40 h-52 flex-shrink-0 rounded-lg overflow-hidden shadow-2xl ring-2 ring-white/10">
+              <div className="relative w-full md:w-80 h-[180px] md:h-[180px] flex-shrink-0 rounded-lg overflow-hidden shadow-2xl ring-2 ring-white/10">
                 <Image
                   src={game.coverImage}
                   alt={game.title}
                   fill
                   className="object-cover"
-                  quality={90}
+                  quality={95}
                   priority
                 />
               </div>
 
               {/* Informações do jogo */}
-              <div className="flex-1 pb-2">
-                <h1 className="text-3xl font-bold text-white mb-3 drop-shadow-lg">
+              <div className="flex-1 pb-2 w-full">
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2 md:mb-3 drop-shadow-lg break-words">
                   {game.title}
                 </h1>
 
                 {/* Gêneros */}
                 {game.genres && game.genres.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-3 md:mb-4">
                     {game.genres.map((genre) => (
                       <span
                         key={genre}
-                        className="px-3 py-1 text-xs font-medium bg-white/10 backdrop-blur-sm text-white rounded-full border border-white/20"
+                        className="px-2 md:px-3 py-0.5 md:py-1 text-xs font-medium bg-white/10 backdrop-blur-sm text-white rounded-full border border-white/20"
                       >
                         {genre}
                       </span>
@@ -153,20 +153,20 @@ export const GameDetailsModal = ({
                 )}
 
                 {/* Estatísticas */}
-                <div className="flex gap-6">
+                <div className="flex flex-wrap gap-3 md:gap-6">
                   <div className="flex items-center gap-2 text-white">
-                    <div className="flex items-center gap-1 bg-primary px-3 py-1.5 rounded-lg">
-                      <Star className="w-4 h-4 fill-white" />
-                      <span className="font-bold text-lg">
+                    <div className="flex items-center gap-1 bg-primary px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg">
+                      <Star className="w-3.5 h-3.5 md:w-4 md:h-4 fill-white" />
+                      <span className="font-bold text-base md:text-lg">
                         {averageRating > 0 ? averageRating.toFixed(1) : '--'}
                       </span>
                     </div>
-                    <span className="text-sm text-white/80">de 5.0</span>
+                    <span className="text-xs md:text-sm text-white/80">de 5.0</span>
                   </div>
 
                   <div className="flex items-center gap-2 text-white">
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">
+                    <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                    <span className="text-xs md:text-sm">
                       {totalReviews} {totalReviews === 1 ? 'avaliação' : 'avaliações'}
                     </span>
                   </div>
@@ -255,8 +255,8 @@ export const GameDetailsModal = ({
                           <div className="text-2xl font-bold mb-1">
                             {formatHours(hltbData.completionist)}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            Completionista
+                          <div className="text-[11px] text-muted-foreground px-0.5">
+                            100%
                           </div>
                         </div>
                       </div>

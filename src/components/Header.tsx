@@ -17,6 +17,7 @@ import { ModeToggle } from "@/components/ModeToggle";
 import { InviteCodeButton } from "@/components/InviteCodeButton";
 import { useTheme } from "@/components/ThemeProvider";
 import { PlayerLevelBadge } from "@/components/PlayerLevel";
+import { NotificationButton } from "@/components/NotificationButton";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -114,6 +115,8 @@ export const Header = ({
             <Plus className="w-4 h-4 mr-2" />
             Adicionar
           </Button>
+
+          <NotificationButton />
 
           <Button asChild variant="outline" size="icon">
             <Link href="/feed">

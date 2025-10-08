@@ -110,9 +110,10 @@ export function TopGames({ games, ratings, limit = 10, onGameClick }: TopGamesPr
                   alt={game.title}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 80px, 100px"
-                  quality={90}
+                  sizes="(max-width: 768px) 120px, 160px"
+                  quality={100}
                   priority={index < 3}
+                  unoptimized
                 />
               </div>
 

@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notifyNewMember } from "@/hooks/use-notifications";
 import {
   Card,
   CardContent,
@@ -178,6 +179,9 @@ export const GroupSelector = ({ userId, onGroupSelected }: GroupSelectorProps) =
           setIsLoading(false);
           return;
         }
+
+        // Notificar outros membros do grupo sobre o novo membro
+        await notifyNewMember(groupData.id, profileData.name, profileData.id);
       }
 
       toast({

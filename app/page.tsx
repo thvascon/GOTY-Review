@@ -328,10 +328,13 @@ export default function HomePage() {
       .map((game) => ({
         ...game,
         averageRating: getAverageRating(game.id),
+        userRating: profile ? ratings.find(
+          (r) => r.gameId === game.id && r.playerId === profile.id
+        )?.rating || 0 : 0,
       }))
       .filter((game) => {
-        // Filtrar por nota
-        if (game.averageRating < searchFilters.minRating || game.averageRating > searchFilters.maxRating) {
+        // Filtrar por nota (baseado na avaliação do usuário logado, não na média)
+        if (profile && (game.userRating < searchFilters.minRating || game.userRating > searchFilters.maxRating)) {
           return false;
         }
 

@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { notifyReviewLike } from '@/hooks/use-notifications';
 
 interface UserCommentCardProps {
   playerId: string;
@@ -116,6 +117,17 @@ export const UserCommentCard = ({
 
         setIsLiked(true);
         setLikesCount(prev => prev + 1);
+
+        // Buscar título do jogo e enviar notificação
+        const { data: gameData } = await supabase
+          .from('games')
+          .select('name')
+          .eq('id', gameId)
+          .single();
+
+        if (gameData) {
+          await notifyReviewLike(playerId, profile.name, gameData.name);
+        }
       }
     } catch (error: any) {
       console.error('Erro ao processar like:', error);

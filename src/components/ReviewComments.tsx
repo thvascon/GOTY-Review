@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageCircle, Send, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { notifyReviewComment } from '@/hooks/use-notifications';
 
 interface ReviewComment {
   id: string;
@@ -99,6 +100,17 @@ export function ReviewComments({
         });
 
       if (error) throw error;
+
+      // Buscar título do jogo e enviar notificação
+      const { data: gameData } = await supabase
+        .from('games')
+        .select('name')
+        .eq('id', gameId)
+        .single();
+
+      if (gameData && reviewPersonId !== profile.id) {
+        await notifyReviewComment(reviewPersonId, profile.name, gameData.name);
+      }
 
       toast({
         title: 'Comentário enviado!',
