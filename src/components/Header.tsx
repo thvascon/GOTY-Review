@@ -18,6 +18,7 @@ import { InviteCodeButton } from "@/components/InviteCodeButton";
 import { useTheme } from "@/components/ThemeProvider";
 import { PlayerLevelBadge } from "@/components/PlayerLevel";
 import { NotificationButton } from "@/components/NotificationButton";
+import { ManageGroupMembersDialog } from "@/components/ManageGroupMembersDialog";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -117,6 +118,8 @@ export const Header = ({
           </Button>
 
           <NotificationButton />
+
+          <ManageGroupMembersDialog />
 
           <Button asChild variant="outline" size="icon">
             <Link href="/feed">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Copy, Check } from "lucide-react";
+import { UserPlus, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -69,7 +69,7 @@ export const InviteCodeButton = () => {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" className="relative">
-          <Users className="w-5 h-5" />
+          <UserPlus className="w-5 h-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
