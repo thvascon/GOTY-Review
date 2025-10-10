@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { FaGithub, FaGoogle } from 'react-icons/fa';
 import Image from 'next/image';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 export const Login = () => {
   const { toast } = useToast();
@@ -37,7 +38,7 @@ export const Login = () => {
       password,
     });
     if (error) {
-      setError(error.message);
+      setError(getErrorMessage(error));
     } else {
       toast({
         title: "Confirme seu email!",
@@ -53,7 +54,7 @@ export const Login = () => {
       provider,
     });
     if (error) {
-      setError(error.message);
+      setError(getErrorMessage(error));
       setLoading(false);
     }
   };

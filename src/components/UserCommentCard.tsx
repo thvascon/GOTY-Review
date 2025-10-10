@@ -8,6 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { notifyReviewLike } from '@/hooks/use-notifications';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 interface UserCommentCardProps {
   playerId: string;
@@ -133,7 +134,7 @@ export const UserCommentCard = ({
       console.error('Erro ao processar like:', error);
       toast({
         title: 'Erro ao processar like',
-        description: error.message,
+        description: getErrorMessage(error),
         variant: 'destructive'
       });
     } finally {

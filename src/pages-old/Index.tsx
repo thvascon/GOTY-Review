@@ -19,6 +19,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { Auth } from "@/components/Auth";
 import { GameList } from "@/components/GameList";
 import { GroupSelector } from "@/components/GroupSelector";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface Player {
   id: string;
@@ -280,7 +281,7 @@ const Index = () => {
     if (error) {
       toast({
         title: "Erro ao adicionar jogo",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
       return;
@@ -330,7 +331,7 @@ const Index = () => {
     if (error) {
       toast({
         title: "Erro ao adicionar pessoa",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
       return;

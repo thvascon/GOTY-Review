@@ -11,6 +11,7 @@ import { MessageCircle, Send, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { notifyReviewComment } from '@/hooks/use-notifications';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 interface ReviewComment {
   id: string;
@@ -122,7 +123,7 @@ export function ReviewComments({
     } catch (error: any) {
       toast({
         title: 'Erro ao enviar comentário',
-        description: error.message,
+        description: getErrorMessage(error),
         variant: 'destructive'
       });
     } finally {
@@ -150,7 +151,7 @@ export function ReviewComments({
     } catch (error: any) {
       toast({
         title: 'Erro ao excluir comentário',
-        description: error.message,
+        description: getErrorMessage(error),
         variant: 'destructive'
       });
     }

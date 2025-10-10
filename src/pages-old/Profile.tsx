@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface UserReview {
   created_at: string;
@@ -195,8 +196,7 @@ const Profile = () => {
       console.error("Erro ao fazer upload:", error);
       toast({
         title: "Erro",
-        description:
-          error.message || "Não foi possível fazer upload da imagem.",
+        description: getErrorMessage(error) || "Não foi possível fazer upload da imagem.",
         variant: "destructive",
       });
     } finally {

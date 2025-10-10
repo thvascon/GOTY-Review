@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/components/AuthProvider';
 import { GameStatusSelector, type GameStatus } from './GameStatusSelector';
 import { Zap } from 'lucide-react';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 interface ReviewData {
   gameId: string;
@@ -99,7 +100,7 @@ export const ModalReview = ({ gameId, gameTitle, players, reviews }: ModalReview
     if (error) {
       toast({
         title: "Erro ao salvar avaliação",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive"
       });
     } else {

@@ -23,6 +23,7 @@ import { GameList } from "@/components/GameList";
 import { GroupSelector } from "@/components/GroupSelector";
 import { TopGames } from "@/components/TopGames";
 import { AdvancedSearch, type SearchFilters } from "@/components/AdvancedSearch";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface Player {
   id: string;
@@ -200,7 +201,7 @@ export default function HomePage() {
     if (error) {
       toast({
         title: "Erro ao adicionar jogo",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
       return;
@@ -229,7 +230,7 @@ export default function HomePage() {
     if (error) {
       toast({
         title: "Erro ao adicionar pessoa",
-        description: error.message,
+        description: getErrorMessage(error),
         variant: "destructive",
       });
       return;

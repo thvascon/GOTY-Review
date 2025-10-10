@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 const gameSchema = z.object({
   title: z.string().trim().min(1, { message: "O título não pode estar vazio" }),
@@ -202,7 +203,7 @@ export const AddGameDialog = ({
       if (error) {
         toast({
           title: "Erro ao criar seção",
-          description: error.message,
+          description: getErrorMessage(error),
           variant: "destructive",
         });
         return;

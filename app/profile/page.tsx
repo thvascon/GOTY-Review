@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { ImageCropper } from "@/components/ImageCropper";
 import { ProfileStats } from "@/components/ProfileStats";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface UserReview {
   created_at: string;
@@ -221,8 +222,7 @@ function ProfilePageContent() {
       console.error("Erro ao fazer upload:", error);
       toast({
         title: "Erro",
-        description:
-          error.message || "Não foi possível fazer upload da imagem.",
+        description: getErrorMessage(error) || "Não foi possível fazer upload da imagem.",
         variant: "destructive",
       });
     } finally {
