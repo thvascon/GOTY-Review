@@ -76,7 +76,7 @@ export const Login = () => {
             alt="GOTY Review Logo"
             width={100}
             height={100}
-            className="w-32 h-32 mb-2"
+            className="w-36 h-36 mb-2"
           />
           <h1 className="text-2xl font-bold text-foreground"></h1>
         </div>

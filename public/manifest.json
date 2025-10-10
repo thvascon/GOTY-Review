@@ -1,6 +1,6 @@
 {
-  "name": "CÓDEX da Galera",
-  "short_name": "CÓDEX",
+  "name": "CoDEX da Galera",
+  "short_name": "CoDEX",
   "description": "Avalie e compartilhe suas opiniões sobre jogos com seus amigos",
   "start_url": "/",
   "display": "standalone",

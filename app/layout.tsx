@@ -18,7 +18,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "CÓDEX - Avalie jogos com seus amigos",
+  title: "CoDEX - Avalie jogos com seus amigos",
   description: "Avalie e compartilhe suas opiniões sobre jogos com sua galera",
   keywords: ["games", "review", "avaliação", "jogos"],
   manifest: "/manifest.json",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "CÓDEX",
+    title: "",
   },
   viewport: {
     width: "device-width",

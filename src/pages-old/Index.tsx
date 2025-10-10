@@ -530,7 +530,7 @@ const Index = () => {
             ) : (
               <div className="text-center py-24">
                 <h2 className="text-2xl font-bold mb-4">
-                  Bem-vindo ao CÓDEX!
+                  Bem-vindo ao CoDEX!
                 </h2>
                 <p className="text-muted-foreground mb-6">
                   Faça login para ver, adicionar e avaliar jogos.

@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, Gamepad2, UserPlus, Activity, User, Users } from "lucide-react";
+import { Menu, X, Gamepad2, UserPlus, Activity, User, Users, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/components/AuthProvider";
 import { ManageGroupMembersDialog } from "@/components/ManageGroupMembersDialog";
+import { InviteCodeButton } from "@/components/InviteCodeButton";
+import { PlayerLevel } from "@/components/PlayerLevel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface MobileMenuProps {
   onAddGameClick: () => void;
@@ -59,6 +69,13 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
             </div>
           </Link>
 
+          {/* XP Progress */}
+          {profile?.xp !== undefined && profile?.level !== undefined && (
+            <div className="px-3 py-2 bg-muted/50 rounded-lg">
+              <PlayerLevel xp={profile.xp} level={profile.level} size="sm" showProgress={true} />
+            </div>
+          )}
+
           <div className="h-px bg-border my-2" />
 
           {/* Feed */}
@@ -78,11 +95,29 @@ export const MobileMenu = ({ onAddGameClick, onAddPersonClick }: MobileMenuProps
 
           <div className="h-px bg-border my-2" />
 
+          {/* Código de Convite */}
+          <InviteCodeButton
+            trigger={
+              <button
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full text-left"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <UserCheck className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="font-medium">Código de Convite</span>
+                  <span className="text-xs text-muted-foreground">Compartilhar código</span>
+                </div>
+              </button>
+            }
+          />
+
+          <div className="h-px bg-border my-2" />
+
           {/* Membros do Grupo */}
           <ManageGroupMembersDialog
             trigger={
               <button
-                onClick={() => handleMenuItemClick()}
                 className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors w-full text-left"
               >
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">

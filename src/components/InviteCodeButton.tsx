@@ -13,7 +13,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/components/AuthProvider";
 
-export const InviteCodeButton = () => {
+interface InviteCodeButtonProps {
+  trigger?: React.ReactNode;
+}
+
+export const InviteCodeButton = ({ trigger }: InviteCodeButtonProps = {}) => {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [inviteCode, setInviteCode] = useState<string>("");
@@ -68,9 +72,11 @@ export const InviteCodeButton = () => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <UserPlus className="w-5 h-5" />
-        </Button>
+        {trigger || (
+          <Button variant="outline" size="icon" className="relative">
+            <UserPlus className="w-5 h-5" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

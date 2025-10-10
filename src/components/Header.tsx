@@ -16,7 +16,12 @@ import { Plus } from "lucide-react";
 import { ModeToggle } from "@/components/ModeToggle";
 import { InviteCodeButton } from "@/components/InviteCodeButton";
 import { useTheme } from "@/components/ThemeProvider";
-import { PlayerLevelBadge } from "@/components/PlayerLevel";
+import { PlayerLevel, PlayerLevelBadge } from "@/components/PlayerLevel";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { NotificationButton } from "@/components/NotificationButton";
 import { ManageGroupMembersDialog } from "@/components/ManageGroupMembersDialog";
 
@@ -80,7 +85,7 @@ export const Header = ({
               alt="GOTY Review Logo"
               width={160}
               height={160}
-              className="w-24 h-24 -ml-2"
+              className="w-28 h-28 -ml-2"
               priority
             />
           </h1>
@@ -103,9 +108,19 @@ export const Header = ({
         {/* Botões Desktop - Direita */}
         <div className="hidden md:flex items-center gap-2 flex-shrink-0 ml-auto">
           {profile?.xp !== undefined && profile?.level !== undefined && (
-            <div className="mr-1">
-              <PlayerLevelBadge xp={profile.xp} level={profile.level} size="sm" />
-            </div>
+            <HoverCard openDelay={200}>
+              <HoverCardTrigger asChild>
+                <div className="mr-1 cursor-pointer">
+                  <PlayerLevelBadge xp={profile.xp} level={profile.level} size="sm" />
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent className="w-64" align="start">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm">Seu Progresso</h4>
+                  <PlayerLevel xp={profile.xp} level={profile.level} size="sm" showProgress={true} />
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           )}
 
           <Button
@@ -153,6 +168,7 @@ export const Header = ({
 
         {/* Controles Mobile */}
         <div className="flex items-center gap-2 md:hidden ml-auto">
+          <NotificationButton />
           <ModeToggle className="text-white hover:text-white hover:bg-white/10" />
           <MobileMenu
             onAddGameClick={() => setIsAddGameOpen(true)}
