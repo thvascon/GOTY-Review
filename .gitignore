@@ -30,6 +30,10 @@ out/
 # Environment variables
 .env*
 
+# Lock files (usar apenas npm)
+pnpm-lock.yaml
+yarn.lock
+
 # Playwright
 playwright-report/
 test-results/
