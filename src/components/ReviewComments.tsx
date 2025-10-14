@@ -110,7 +110,9 @@ export function ReviewComments({
         .single();
 
       if (gameData && reviewPersonId !== profile.id) {
-        await notifyReviewComment(reviewPersonId, profile.name, gameData.name);
+        console.log('Enviando notificação de comentário para:', { reviewPersonId, userName: profile.name, gameName: gameData.name });
+        const result = await notifyReviewComment(reviewPersonId, profile.name, gameData.name);
+        console.log('Resultado da notificação de comentário:', result);
       }
 
       toast({

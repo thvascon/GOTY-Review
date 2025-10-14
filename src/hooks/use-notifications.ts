@@ -65,17 +65,23 @@ export async function notifyReviewLike(
   likerName: string,
   gameTitle: string
 ) {
+  console.log('notifyReviewLike chamado com:', { personId, likerName, gameTitle });
+
   // Buscar o user_id (auth UUID) da pessoa
-  const { data: person } = await supabase
+  const { data: person, error: personError } = await supabase
     .from('people')
     .select('user_id')
     .eq('id', personId)
     .single();
 
+  console.log('Resultado da busca de person:', { person, personError });
+
   if (!person?.user_id) {
     console.error('Person not found or has no user_id:', personId);
     return { success: false, error: 'Person not found' };
   }
+
+  console.log('Criando notificação para user_id:', person.user_id);
 
   return createNotification({
     userId: person.user_id,

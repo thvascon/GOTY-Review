@@ -58,7 +58,12 @@ export function NotificationButton() {
   }, [session?.user?.id]);
 
   const fetchNotifications = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.log('NotificationButton: Sem session.user.id');
+      return;
+    }
+
+    console.log('NotificationButton: Buscando notificações para user_id:', session.user.id);
 
     const { data, error } = await supabase
       .from('notifications')
@@ -72,6 +77,7 @@ export function NotificationButton() {
       return;
     }
 
+    console.log('NotificationButton: Notificações encontradas:', data);
     setNotifications(data || []);
     setUnreadCount(data?.filter((n) => !n.read).length || 0);
   };
