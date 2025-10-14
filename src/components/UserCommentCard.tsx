@@ -127,11 +127,7 @@ export const UserCommentCard = ({
           .single();
 
         if (gameData) {
-          console.log('Enviando notificação de like para:', { playerId, userName: profile.name, gameName: gameData.name });
-          const result = await notifyReviewLike(playerId, profile.name, gameData.name);
-          console.log('Resultado da notificação:', result);
-        } else {
-          console.warn('Game data não encontrado para notificação');
+          await notifyReviewLike(playerId, profile.name, gameData.name, gameId);
         }
       }
     } catch (error: any) {

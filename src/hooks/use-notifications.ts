@@ -63,31 +63,26 @@ export async function notifyLevelUp(personId: string, newLevel: number) {
 export async function notifyReviewLike(
   personId: string,
   likerName: string,
-  gameTitle: string
+  gameTitle: string,
+  gameId: string
 ) {
-  console.log('notifyReviewLike chamado com:', { personId, likerName, gameTitle });
-
   // Buscar o user_id (auth UUID) da pessoa
-  const { data: person, error: personError } = await supabase
+  const { data: person } = await supabase
     .from('people')
     .select('user_id')
     .eq('id', personId)
     .single();
-
-  console.log('Resultado da busca de person:', { person, personError });
 
   if (!person?.user_id) {
     console.error('Person not found or has no user_id:', personId);
     return { success: false, error: 'Person not found' };
   }
 
-  console.log('Criando notificação para user_id:', person.user_id);
-
   return createNotification({
     userId: person.user_id,
     type: 'review_like',
     message: `${likerName} curtiu sua avaliação de "${gameTitle}"`,
-    data: { likerName, gameTitle },
+    data: { likerName, gameTitle, gameId },
   });
 }
 
@@ -95,7 +90,8 @@ export async function notifyReviewLike(
 export async function notifyReviewComment(
   personId: string,
   commenterName: string,
-  gameTitle: string
+  gameTitle: string,
+  gameId: string
 ) {
   // Buscar o user_id (auth UUID) da pessoa
   const { data: person } = await supabase
@@ -113,7 +109,7 @@ export async function notifyReviewComment(
     userId: person.user_id,
     type: 'review_comment',
     message: `${commenterName} comentou na sua avaliação de "${gameTitle}"`,
-    data: { commenterName, gameTitle },
+    data: { commenterName, gameTitle, gameId }, // Adiciona gameId para navegação
   });
 }
 

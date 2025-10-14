@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/components/AuthProvider';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { playNotificationSound } from '@/utils/notificationSound';
 
 interface Notification {
   id: string;
@@ -25,6 +27,7 @@ interface Notification {
 
 export function NotificationButton() {
   const { profile, session } = useAuth();
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -46,11 +49,32 @@ export function NotificationButton() {
           filter: `user_id=eq.${session.user.id}`,
         },
         (payload) => {
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
+          const newNotification = payload.new as Notification;
+
+          // Adicionar notificação à lista
+          setNotifications((prev) => [newNotification, ...prev]);
           setUnreadCount((prev) => prev + 1);
+
+          // Tocar som de notificação
+          playNotificationSound();
+
+          // Mostrar notificação do navegador (se tiver permissão)
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('CoDEX', {
+              body: newNotification.message,
+              icon: '/icon-192x192.png',
+              badge: '/icon-192x192.png',
+              tag: newNotification.id,
+            });
+          }
         }
       )
       .subscribe();
+
+    // Pedir permissão para notificações do navegador
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
 
     return () => {
       supabase.removeChannel(channel);
@@ -58,12 +82,7 @@ export function NotificationButton() {
   }, [session?.user?.id]);
 
   const fetchNotifications = async () => {
-    if (!session?.user?.id) {
-      console.log('NotificationButton: Sem session.user.id');
-      return;
-    }
-
-    console.log('NotificationButton: Buscando notificações para user_id:', session.user.id);
+    if (!session?.user?.id) return;
 
     const { data, error } = await supabase
       .from('notifications')
@@ -77,7 +96,6 @@ export function NotificationButton() {
       return;
     }
 
-    console.log('NotificationButton: Notificações encontradas:', data);
     setNotifications(data || []);
     setUnreadCount(data?.filter((n) => !n.read).length || 0);
   };
@@ -115,6 +133,25 @@ export function NotificationButton() {
 
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     setUnreadCount(0);
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    // Marcar como lida
+    if (!notification.read) {
+      await markAsRead(notification.id);
+    }
+
+    // Navegar baseado no tipo
+    if (notification.type === 'review_like' || notification.type === 'review_comment') {
+      const gameId = notification.data?.gameId;
+      if (gameId) {
+        // Fechar o popover
+        setIsOpen(false);
+        // Navegar para a home com o gameId como query param para abrir o modal
+        router.push(`/?game=${gameId}`);
+      }
+    }
+    // Adicione mais casos conforme necessário para outros tipos de notificação
   };
 
   const getNotificationIcon = (type: Notification['type']) => {
@@ -191,7 +228,7 @@ export function NotificationButton() {
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
+                  onClick={() => handleNotificationClick(notification)}
                   className={cn(
                     'p-4 cursor-pointer transition-colors hover:bg-muted/50',
                     !notification.read && 'bg-primary/5'
