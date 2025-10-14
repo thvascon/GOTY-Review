@@ -33,7 +33,12 @@ export function NotificationButton() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      console.log('NotificationButton: Sem session.user.id');
+      return;
+    }
+
+    console.log('NotificationButton: Configurando Realtime para user_id:', session.user.id);
 
     fetchNotifications();
 
@@ -49,6 +54,7 @@ export function NotificationButton() {
           filter: `user_id=eq.${session.user.id}`,
         },
         (payload) => {
+          console.log('🔔 NOVA NOTIFICAÇÃO RECEBIDA via Realtime:', payload);
           const newNotification = payload.new as Notification;
 
           // Adicionar notificação à lista
@@ -56,6 +62,7 @@ export function NotificationButton() {
           setUnreadCount((prev) => prev + 1);
 
           // Tocar som de notificação
+          console.log('🔊 Tocando som...');
           playNotificationSound();
 
           // Mostrar notificação do navegador (se tiver permissão)
@@ -69,7 +76,9 @@ export function NotificationButton() {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Status da subscrição Realtime:', status);
+      });
 
     // Pedir permissão para notificações do navegador
     if ('Notification' in window && Notification.permission === 'default') {
@@ -77,6 +86,7 @@ export function NotificationButton() {
     }
 
     return () => {
+      console.log('NotificationButton: Removendo canal Realtime');
       supabase.removeChannel(channel);
     };
   }, [session?.user?.id]);
