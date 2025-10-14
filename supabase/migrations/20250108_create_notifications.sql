@@ -1,7 +1,9 @@
 -- Create notifications table
+-- user_id references auth.users, not people.id
+-- This allows RLS policies to work correctly with auth.uid()
 CREATE TABLE IF NOT EXISTS notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES people(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('level_up', 'review_like', 'review_comment', 'new_member')),
   message TEXT NOT NULL,
   data JSONB,

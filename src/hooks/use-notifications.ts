@@ -38,9 +38,21 @@ export async function createNotification({
 }
 
 // Notificação de subida de nível
-export async function notifyLevelUp(userId: string, newLevel: number) {
+export async function notifyLevelUp(personId: string, newLevel: number) {
+  // Buscar o user_id (auth UUID) da pessoa
+  const { data: person } = await supabase
+    .from('people')
+    .select('user_id')
+    .eq('id', personId)
+    .single();
+
+  if (!person?.user_id) {
+    console.error('Person not found or has no user_id:', personId);
+    return { success: false, error: 'Person not found' };
+  }
+
   return createNotification({
-    userId,
+    userId: person.user_id,
     type: 'level_up',
     message: `🎉 Parabéns! Você subiu para o nível ${newLevel}!`,
     data: { level: newLevel },
@@ -49,12 +61,24 @@ export async function notifyLevelUp(userId: string, newLevel: number) {
 
 // Notificação de like em review
 export async function notifyReviewLike(
-  userId: string,
+  personId: string,
   likerName: string,
   gameTitle: string
 ) {
+  // Buscar o user_id (auth UUID) da pessoa
+  const { data: person } = await supabase
+    .from('people')
+    .select('user_id')
+    .eq('id', personId)
+    .single();
+
+  if (!person?.user_id) {
+    console.error('Person not found or has no user_id:', personId);
+    return { success: false, error: 'Person not found' };
+  }
+
   return createNotification({
-    userId,
+    userId: person.user_id,
     type: 'review_like',
     message: `${likerName} curtiu sua avaliação de "${gameTitle}"`,
     data: { likerName, gameTitle },
@@ -63,12 +87,24 @@ export async function notifyReviewLike(
 
 // Notificação de comentário em review
 export async function notifyReviewComment(
-  userId: string,
+  personId: string,
   commenterName: string,
   gameTitle: string
 ) {
+  // Buscar o user_id (auth UUID) da pessoa
+  const { data: person } = await supabase
+    .from('people')
+    .select('user_id')
+    .eq('id', personId)
+    .single();
+
+  if (!person?.user_id) {
+    console.error('Person not found or has no user_id:', personId);
+    return { success: false, error: 'Person not found' };
+  }
+
   return createNotification({
-    userId,
+    userId: person.user_id,
     type: 'review_comment',
     message: `${commenterName} comentou na sua avaliação de "${gameTitle}"`,
     data: { commenterName, gameTitle },
@@ -98,7 +134,7 @@ export async function notifyNewMember(
     const notifications = members
       .filter((member) => member.id !== excludeUserId)
       .map((member) => ({
-        user_id: member.id,
+        user_id: member.user_id, // usar o auth UUID, não o people.id
         type: 'new_member' as const,
         message: `${newMemberName} entrou no grupo!`,
         data: { newMemberName },

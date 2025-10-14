@@ -24,13 +24,13 @@ interface Notification {
 }
 
 export function NotificationButton() {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    if (!profile?.id) return;
+    if (!session?.user?.id) return;
 
     fetchNotifications();
 
@@ -43,7 +43,7 @@ export function NotificationButton() {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${profile.id}`,
+          filter: `user_id=eq.${session.user.id}`,
         },
         (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev]);
@@ -55,15 +55,15 @@ export function NotificationButton() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile?.id]);
+  }, [session?.user?.id]);
 
   const fetchNotifications = async () => {
-    if (!profile?.id) return;
+    if (!session?.user?.id) return;
 
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
-      .eq('user_id', profile.id)
+      .eq('user_id', session.user.id)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -94,12 +94,12 @@ export function NotificationButton() {
   };
 
   const markAllAsRead = async () => {
-    if (!profile?.id) return;
+    if (!session?.user?.id) return;
 
     const { error } = await supabase
       .from('notifications')
       .update({ read: true })
-      .eq('user_id', profile.id)
+      .eq('user_id', session.user.id)
       .eq('read', false);
 
     if (error) {
