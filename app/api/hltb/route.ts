@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { HowLongToBeatService } from 'howlongtobeat';
+// @ts-ignore - CommonJS module
+import pkg from 'howlongtobeat-js';
+
+const { HowLongToBeat } = pkg;
 
 // Otimizações de cache
 export const dynamic = 'force-dynamic';
 export const revalidate = 86400; // 24 horas
 
-const hltbService = new HowLongToBeatService();
+const hltbService = new HowLongToBeat();
 const cache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_DURATION = 1000 * 60 * 60 * 24; // 24 horas
 
@@ -33,43 +36,43 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Buscar no HowLongToBeat
+    // Buscar no HowLongToBeat usando a biblioteca atualizada
     console.log('📡 Fazendo requisição ao HowLongToBeat...');
-    const results = await hltbService.search(title);
-    console.log(`📊 Recebeu ${results?.length || 0} resultados`);
+    const rawResults = await hltbService.search(title);
+    console.log(`📊 Recebeu ${rawResults?.length || 0} resultados`);
 
-    if (!results || results.length === 0) {
+    if (!rawResults || rawResults.length === 0) {
       console.log('❌ Nenhum resultado encontrado');
       return NextResponse.json([]);
     }
 
-    console.log('🔍 Primeiro resultado (raw):', {
+    // Formatar resultados para o formato esperado pelo frontend
+    const results = rawResults.map((game: any) => ({
+      id: String(game.gameId),
+      name: game.gameName,
+      imageUrl: game.gameImageUrl,
+      main: Math.round(game.mainStory || 0),
+      mainExtra: Math.round(game.mainExtra || 0),
+      completionist: Math.round(game.completionist || 0),
+      platforms: game.profilePlatforms || [],
+      similarity: game.similarity || 0
+    }));
+
+    console.log('🔍 Primeiro resultado:', {
       id: results[0].id,
       name: results[0].name,
-      gameplayMain: results[0].gameplayMain,
-      gameplayMainExtra: results[0].gameplayMainExtra,
-      gameplayCompletionist: results[0].gameplayCompletionist
+      main: results[0].main,
+      mainExtra: results[0].mainExtra,
+      completionist: results[0].completionist
     });
-
-    // Formatar resultados
-    const formattedResults = results.map(game => ({
-      id: game.id,
-      name: game.name,
-      imageUrl: game.imageUrl,
-      main: Math.round(game.gameplayMain || 0),
-      mainExtra: Math.round(game.gameplayMainExtra || 0),
-      completionist: Math.round(game.gameplayCompletionist || 0),
-      platforms: game.platforms || [],
-      similarity: game.similarity || 0
-    })).sort((a, b) => b.similarity - a.similarity);
 
     // Salvar no cache
     cache.set(cacheKey, {
-      data: formattedResults,
+      data: results,
       timestamp: Date.now()
     });
 
-    return NextResponse.json(formattedResults, {
+    return NextResponse.json(results, {
       headers: {
         'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=43200',
       },

@@ -29,3 +29,12 @@ out/
 
 # Environment variables
 .env*
+
+# Playwright
+playwright-report/
+test-results/
+
+# Test files (arquivos de diagnóstico do HowLongToBeat)
+api/test-*.js
+api/hltb-key-extractor.js
+api/hltb-scraper.js
