@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/hover-card";
 import { NotificationButton } from "@/components/NotificationButton";
 import { ManageGroupMembersDialog } from "@/components/ManageGroupMembersDialog";
+import { GroupSwitcher } from "@/components/GroupSwitcher";
 
 interface HeaderProps {
   onAddGame: (game: { title: string; coverImage?: string }) => void;
@@ -133,6 +134,8 @@ export const Header = ({
           </Button>
 
           <NotificationButton />
+
+          <GroupSwitcher />
 
           <ManageGroupMembersDialog />
 

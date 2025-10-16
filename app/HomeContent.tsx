@@ -51,6 +51,8 @@ interface Rating {
 interface Section {
   id: string;
   title: string;
+  groupId?: string;
+  groupName?: string;
 }
 
 interface GameWithDetails extends Game {
@@ -190,7 +192,10 @@ function HomePageContent() {
     sectionId?: string;
     genres?: string[];
   }) => {
-    if (!profile?.group_id) {
+    // Use active_group_id if available, fallback to group_id
+    const groupId = profile?.active_group_id || profile?.group_id;
+
+    if (!groupId) {
       toast({
         title: "Erro",
         description: "Você precisa estar em um grupo para adicionar jogos.",
@@ -207,7 +212,7 @@ function HomePageContent() {
           cover_image: gameData.coverImage || "/placeholder.svg",
           section_id: gameData.sectionId || null,
           genres: gameData.genres || [],
-          group_id: profile.group_id,
+          group_id: groupId,
           rawg_id: gameData.rawgId || null,
         },
       ])
@@ -521,7 +526,7 @@ function HomePageContent() {
                       className="border-b-0 overflow-visible relative"
                     >
                       <AccordionTrigger className="text-2xl font-bold hover:no-underline">
-                        {section.title}
+                        {section.title} {section.groupName && <span className="text-muted-foreground text-lg ml-2">({section.groupName})</span>}
                       </AccordionTrigger>
                       <AccordionContent className="overflow-visible relative">
                         {renderGameCardsForSection(section.id)}

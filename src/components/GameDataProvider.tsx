@@ -16,6 +16,7 @@ interface Game {
   coverImage: string;
   sectionId?: string;
   genres?: string[];
+  groupId?: string;
 }
 
 interface Rating {
@@ -29,6 +30,8 @@ interface Rating {
 interface Section {
   id: string;
   title: string;
+  groupId?: string;
+  groupName?: string;
 }
 
 interface GameDataContextType {
@@ -70,7 +73,7 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
   console.log("GameDataProvider renderizou - cache:", cachedData.isFetched, "games:", games.length, "loading:", loading);
 
   const fetchData = async (forceRefetch = false) => {
-    if (!session || !profile || profile.name === session.user.email || !profile.group_id) {
+    if (!session || !profile || profile.name === session.user.email) {
       setLoading(false);
       return;
     }
@@ -88,7 +91,7 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    console.log("Buscando dados do servidor...");
+    console.log("Buscando dados do servidor de todos os grupos...");
     isFetchingRef.current = true;
     // Só mostrar loading se não tiver nenhum dado ainda
     if (cachedData.games.length === 0) {
@@ -96,22 +99,57 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
     }
 
     try {
-      const [peopleRes, sectionsRes, gamesRes, reviewsRes] = await Promise.all([
-        supabase.from("people").select("id, name, avatar_url").eq("group_id", profile.group_id),
-        supabase.from("sections").select("*").eq("group_id", profile.group_id),
-        supabase.from("games").select("*").eq("group_id", profile.group_id),
+      // Tentar buscar grupos via nova função (se migration foi aplicada)
+      const { data: userGroups, error: groupsError } = await supabase.rpc("get_user_groups");
+
+      let groupIds: string[] = [];
+
+      if (groupsError) {
+        // Fallback: Se a função não existe, usar group_id do profile (modo legado)
+        console.log("Usando modo legado (sem multi-group):", groupsError.message);
+        if (profile?.group_id) {
+          groupIds = [profile.group_id];
+        } else {
+          console.log("Usuário não está em nenhum grupo");
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Usar os grupos da nova função
+        groupIds = (userGroups || []).map((g: any) => g.group_id);
+
+        if (groupIds.length === 0) {
+          console.log("Usuário não está em nenhum grupo");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Buscar dados de todos os grupos do usuário
+      const [peopleRes, sectionsRes, gamesRes, reviewsRes, groupsDataRes] = await Promise.all([
+        supabase.from("people").select("id, name, avatar_url, group_id").in("group_id", groupIds),
+        supabase.from("sections").select("*").in("group_id", groupIds),
+        supabase.from("games").select("*").in("group_id", groupIds),
         supabase.from("reviews").select("*"),
+        supabase.from("groups").select("id, name").in("id", groupIds),
       ]);
 
       if (peopleRes.error || sectionsRes.error || gamesRes.error || reviewsRes.error) {
-        console.error("Erro ao buscar dados:", 
+        console.error("Erro ao buscar dados:",
           peopleRes.error || sectionsRes.error || gamesRes.error || reviewsRes.error
         );
         return;
       }
 
+      const groupsMap = new Map((groupsDataRes.data || []).map((g: any) => [g.id, g.name]));
+
       const playersData = peopleRes.data || [];
-      const sectionsData = sectionsRes.data || [];
+      const sectionsData = (sectionsRes.data || []).map((s: any) => ({
+        id: s.id,
+        title: s.title,
+        groupId: s.group_id,
+        groupName: groupsMap.get(s.group_id) || "Grupo",
+      }));
       const gamesData = (gamesRes.data || []).map((g: any) => ({
         id: g.id,
         title: g.name,
@@ -119,6 +157,7 @@ export const GameDataProvider = ({ children }: { children: ReactNode }) => {
         sectionId: g.section_id,
         genres: g.genres || [],
         rawgId: g.rawg_id,
+        groupId: g.group_id,
       }));
       const ratingsData = (reviewsRes.data || []).map((r: any) => ({
         gameId: r.game_id,

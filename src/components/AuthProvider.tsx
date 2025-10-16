@@ -10,6 +10,7 @@ interface Profile {
   avatar_url?: string;
   created_at: string;
   group_id?: string | null;
+  active_group_id?: string | null;
   xp?: number;
   level?: number;
 }
@@ -42,7 +43,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchProfile = useCallback(async (currentSession: Session) => {
     const { data: userProfile } = await supabase
       .from('people')
-      .select('id, name, user_id, avatar_url, created_at, group_id, xp, level')
+      .select('id, name, user_id, avatar_url, created_at, group_id, active_group_id, xp, level')
       .eq('user_id', currentSession.user.id)
       .maybeSingle();
     setProfile(userProfile);
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session) {
         const { data } = await supabase
           .from("people")
-          .select("id, name, user_id, avatar_url, created_at, group_id, xp, level")
+          .select("id, name, user_id, avatar_url, created_at, group_id, active_group_id, xp, level")
           .eq("user_id", session.user.id)
           .maybeSingle();
         userProfile = data;
