@@ -526,7 +526,7 @@ function HomePageContent() {
                       className="border-b-0 overflow-visible relative"
                     >
                       <AccordionTrigger className="text-2xl font-bold hover:no-underline">
-                        {section.title} {section.groupName && <span className="text-muted-foreground text-lg ml-2">({section.groupName})</span>}
+                        {section.title}
                       </AccordionTrigger>
                       <AccordionContent className="overflow-visible relative">
                         {renderGameCardsForSection(section.id)}
